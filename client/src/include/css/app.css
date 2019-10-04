@@ -1,0 +1,12 @@
+.projection-table {
+  width: 90%;
+  margin: 10px;
+}
+
+table, tr, td, th {
+  border: 1px solid gray;
+}
+
+.monthly-revenue-td:hover {
+  color:green;
+}
