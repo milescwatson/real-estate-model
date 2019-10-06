@@ -18,13 +18,19 @@ class Table extends React.Component {
 
   RenderTable = function(props) {
     var returnJSX = [];
-    console.log('propsÚ: ', props);
-    for (var i = 0; i < props.yearsOutComputation; i++) {
-      console.log('loop: ', i);
+
+    returnJSX.push(
+      <tr>
+        <th>Year</th>
+        <th>Net Expenses</th>
+      </tr>
+    );
+
+    for (var i = 0; i < this.props.yearsOutComputation; i++) {
       returnJSX.push(
         <tr key={i}>
-          <td>{props.computedArrays.netOperatingExpenses[i]}</td>
-          <td>hello</td>
+          <td>{i}</td>
+          <td>${parseFloat(this.props.computedArrays.netOperatingExpenses[i]).toLocaleString('en-us')}</td>
         </tr>
       )
     }
@@ -34,7 +40,7 @@ class Table extends React.Component {
 
   render(){
     return(
-      <this.RenderTable props={this.props} />
+      <this.RenderTable />
     )
   }
 

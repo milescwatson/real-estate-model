@@ -22,10 +22,6 @@ class UnitsBox extends React.Component{
     this.state = this.initialState;
   }
 
-  componentDidUpdate = function(props){
-
-  }
-
   GenerateInputTable = function(props){
     return(
     <React.Fragment>

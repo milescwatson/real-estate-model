@@ -4,8 +4,7 @@ import './include/css/app.css';
 import Units from './Units';
 import LineItemGroup from './LineItemGroup';
 import Table from './Table.js';
-
-// import styled from 'styled-components';
+import Expenses from './Expenses';
 
 class App extends React.Component{
   constructor(props){
@@ -14,42 +13,24 @@ class App extends React.Component{
       model : {
         rentYRG: 0,
         appreciationYRG: 1,
-        insuranceYRG: 0,
-        repairsYRG: 0,
-        waterYRG: 0,
-        sewerYRG: 0,
-        miscYRG: 0,
-        propertyTaxYRG: 0,
         unitsPerMonth: {
           1: {
-            name: 'test',
+            name: 'Unit 1',
             amount: 2300
           }
         },
         expenses: {
-          insurance: {
-            amount: 55,
-            yrg: 1
+          1: {
+            name: 'Insurance',
+            amount: 100,
+            amountYearly: 1200,
+            yrg: 2
           },
-          repairs: {
-            amount: 12,
-            yrg: 1
-          },
-          water: {
-            amount: 22,
-            yrg: 1
-          },
-          sewer: {
-            amount: 0,
-            yrg: 0
-          },
-          propertyTax: {
-            amount: 0,
-            yrg: 0
-          },
-          misc: {
-            amount: 0,
-            yrg: 0
+          2: {
+            name: 'Property Tax',
+            amount: 180,
+            amountYearly: 2160,
+            yrg: 2
           }
         },
         vaccancyPct: 5,
@@ -152,7 +133,7 @@ class App extends React.Component{
       this.setState({
         computedArrays: workingComputedArrays
       });
-      
+
     });
 
     //now, compute everything starting at the first element of the array
@@ -308,19 +289,39 @@ class App extends React.Component{
 
   updateUnitsCallback = function(unitsObj){
     var workingModel = this.state.model;
-    console.log('updateUnitsCallback() unitsObj: ', unitsObj);
+    workingModel.unitsPerMonth = unitsObj;
+    this.setState({
+      model: workingModel
+    });
+  }.bind(this);
 
-    // this.setState({
-    //   model: workingModel
-    // });
-
+  updateExpensesCallback = function() {
+    console.log('updateExpensesCallback');
   }.bind(this);
 
   render(){
     return(
       <React.Fragment>
-        <Units name='Units' initialUnits={this.state.model.unitsPerMonth} updateUnitsInParent = {this.updateUnitsCallback} />
-        <Table yearsOutComputation={this.state.model.yearsOutComputation} computedArrays = {this.state.computedArrays} />
+        {this.state.view.allInputs}
+
+        <Units
+          name='Units'
+          initialUnits={this.state.model.unitsPerMonth}
+          updateUnitsInParent = {this.updateUnitsCallback}
+        />
+
+        <Expenses
+          name='Expenses'
+          initialExpenses = {this.state.model.expenses}
+          updateUnitsInParent = {this.updateExpensesCallback}
+          userViews={this.state.userViews}
+        />
+
+        <Table
+          yearsOutComputation={this.state.model.yearsOutComputation}
+          computedArrays = {this.state.computedArrays}
+        />
+
       </React.Fragment>
     )
   }
