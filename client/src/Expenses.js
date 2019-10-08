@@ -25,26 +25,19 @@ class Expenses extends React.Component{
   GenerateInputTable = function(props){
     return(
     <React.Fragment>
-      <div className="units-container">
-      <table>
-        <tbody>
-          <tr>
-            <th><h4>{this.props.name}</h4></th>
-            <td></td>
-            <td><button className='btn btn-outline-primary' style={addUnitButtonStyle} onClick={this.handleAddExpense}>Add Expense</button></td>
-          </tr>
-          <tr>
-            <th>Title</th>
-            <th>Monthly</th>
-            <th>Annual</th>
-            <th>Growth Per Year</th>
-          </tr>
-          <this.GenerateExpenseRows />
-          <this.GenerateBottomLine />
-
-        </tbody>
-      </table>
-      </div>
+        <tr>
+          <th><h4>{this.props.name}</h4></th>
+          <td></td>
+          <td><button className='btn btn-outline-primary' style={addUnitButtonStyle} onClick={this.handleAddExpense}>Add Expense</button></td>
+        </tr>
+        <tr>
+          <th>Expense Label</th>
+          <th></th>
+          <th></th>
+          <th>Expected Annual Growth</th>
+        </tr>
+        <this.GenerateExpenseRows />
+        <this.GenerateBottomLine />
     </React.Fragment>
     );
   }.bind(this);
@@ -86,31 +79,58 @@ class Expenses extends React.Component{
       case 'yrg':
         workingModel.expenses[id].yrg = value;
         break;
+      case 'expenseName':
+        workingModel.expenses[id].name = event.target.value;
+        break;
+      default:
+        alert('unhandled switch statement error for value: ', value);
+        break;
     }
 
     this.setState({
       model: workingModel
+    }, () => {
+      this.props.updateExpensesInParent(this.state.model.expenses);
     });
 
   }.bind(this);
 
   handleAddExpense = function(){
     var workingModel = this.state.model,
-        numUnits = Object.keys(this.state.model.expenses).length;
+        counter = 0;
 
-    var counter = 0;
     for (var key in this.state.model.expenses){
       if (parseInt(key) > counter){
-        counter = key;
+        counter = parseInt(key);
       }
     }
-    workingModel.expenses[key+1] = {};
-    workingModel.expenses[key+1].name = 'Expense ' + Object.keys(this.state.model.expenses).length.toString();
-    workingModel.expenses[key+1].amount = 0;
+    key++;
+
+    workingModel.expenses[key] = {};
+    workingModel.expenses[key].name = 'Expense ' + Object.keys(this.state.model.expenses).length.toString();
+    workingModel.expenses[key].amount = 0;
+
+    workingModel.expenses[key].yrg = .02;
+    workingModel.expenses[key].amountYearly = 0;
 
     this.setState({
       model: workingModel
+    }, () => {
+      this.props.updateExpensesInParent(this.state.model.expenses);
     });
+
+  }.bind(this);
+
+  handleDeleteRow = function(id){
+    var workingModel = this.state.model;
+    delete workingModel.expenses[id];
+
+    this.setState({
+      model: workingModel
+    }, () => {
+      this.props.updateExpensesInParent(this.state.model.expenses);
+    });
+
   }.bind(this);
 
   GenerateExpenseRows = function(props){
@@ -121,7 +141,7 @@ class Expenses extends React.Component{
       if(typeof(this.state.model.expenses[id].amount) !== 'undefined'){
         unitRowsVisual.push(
           <tr key={count}>
-            <td><input type="text" value={this.state.model.expenses[id].name} name={'name_' + id} onChange ={this.handleEditExpense} /> </td>
+            <td><input type="text" value={this.state.model.expenses[id].name} name={'expenseName_' + id} onChange ={this.handleEditExpense} /> </td>
 
             <td>
               <ReactNumeric
@@ -142,7 +162,7 @@ class Expenses extends React.Component{
                 value={this.state.model.expenses[id].amountYearly}
                 currencySymbol="$"
                 minimumValue="0"
-                maximumValue="10000000"
+                maximumValue="120000000"
                 decimalCharacter="."
                 digitGroupSeparator=","
                 onChange={this.handleEditExpense}
@@ -152,10 +172,14 @@ class Expenses extends React.Component{
             <td>
               <ReactNumeric
                 name={'yrg_'+id}
-                value={this.state.model.expenses[id].yrg * .01}
+                value={this.state.model.expenses[id].yrg}
                 preDefined={predefinedOptions.percentageUS2dec}
                 onChange={this.handleEditExpense}
               />
+            </td>
+
+            <td onClick={() => {this.handleDeleteRow(id)}}>
+              x
             </td>
 
           </tr>);

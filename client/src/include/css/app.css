@@ -10,3 +10,8 @@ table, tr, td, th {
 .monthly-revenue-td:hover {
   color:green;
 }
+
+.inputs {
+  width: 20%;
+  display:-webkit-inline-box;
+}

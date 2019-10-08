@@ -25,9 +25,6 @@ class UnitsBox extends React.Component{
   GenerateInputTable = function(props){
     return(
     <React.Fragment>
-      <div className="units-container">
-      <table>
-        <tbody>
           <tr>
             <th><h4>{this.props.name}</h4></th>
             <td></td>
@@ -35,76 +32,81 @@ class UnitsBox extends React.Component{
           </tr>
           <tr>
             <th>Unit Name</th>
-            <th>Monthly Revenue</th>
-            <th>Yearly Revenue</th>
           </tr>
           <this.GenerateUnitRows />
-          <this.GenerateBottomLine />
-
-        </tbody>
-      </table>
-      </div>
     </React.Fragment>
     );
   }.bind(this);
 
-  GenerateBottomLine = function(){
-    var sum = 0;
-
-    Object.keys(this.state.model.unitsPerMonth).forEach((id) => {
-      sum += this.state.model.unitsPerMonth[id].amount;
-    });
-
-    return(
-      //TODO: Add vaccaancy loss
-      <tr className = "bottomLine">
-        <td><b>Gross Rental Income</b></td>
-        <td>${sum.toLocaleString('en-us')}</td>
-        <td>${(sum*12).toLocaleString('en-us')}</td>
-      </tr>
-
-    )
-
-  }.bind(this);
-
-  handleEditUnit = (event, value, props) => {
-    var id = event.target.name,
-        workingModel = this.state.model;
-
-    if (typeof(value) !== 'undefined') {
-      id = parseInt((event.target.name).substring(7));
-
-      workingModel.unitsPerMonth[id].amount = value;
-      this.setState({
-        model: workingModel
-      });
-
-    }else{
-      workingModel.unitsPerMonth[id].name = event.target.value;
-      this.setState({
-        model: workingModel
-      });
-    }
-  }
-
-  handleAddUnit = function(){
-    var workingModel = this.state.model,
-        numUnits = Object.keys(this.state.model.unitsPerMonth).length;
-
-    var counter = 0;
-    for (var key in this.state.model.unitsPerMonth){
-      if (parseInt(key) > counter){
-        counter = key;
-      }
-    }
-
-    workingModel.unitsPerMonth[key+1] = {};
-    workingModel.unitsPerMonth[key+1].name = 'Unit ' + Object.keys(this.state.model.unitsPerMonth).length.toString();
-    workingModel.unitsPerMonth[key+1].amount = 0;
+  handleDeleteRow = function(id){
+    var workingModel = this.state.model;
+    delete workingModel.unitsPerMonth[id];
 
     this.setState({
       model: workingModel
+    }, () => {
+      this.props.updateUnitsInParent(this.state.model.unitsPerMonth);
     });
+
+  }.bind(this);
+
+  handleEditUnit = function(event, value){
+    var input = event.target.name.split('_'),
+        name = input[0],
+        id = input[1],
+        workingModel = this.state.model;
+
+    switch (name) {
+      case 'amount':
+        // if (value < 10000000) {
+          workingModel.unitsPerMonth[id].amount = value;
+          workingModel.unitsPerMonth[id].amountYearly = value * 12;
+        // }else{
+          //TODO: Better alert
+        // }
+        break;
+      case 'amountYearly':
+        workingModel.unitsPerMonth[id].amountYearly =  value;
+        workingModel.unitsPerMonth[id].amount = value / 12;
+        break;
+      case 'unitName':
+        workingModel.unitsPerMonth[id].name =  event.target.value;
+        break;
+      default:
+        alert('unhandled switch statement error for value: ', value);
+        break;
+    }
+
+    this.setState({
+      model: workingModel
+    }, () => {
+      this.props.updateUnitsInParent(this.state.model.unitsPerMonth);
+    });
+
+  }.bind(this);
+
+  handleAddUnit = function(){
+    var workingModel = this.state.model,
+        counter = 0;
+
+    for (var key in this.state.model.unitsPerMonth){
+      if (parseInt(key) > counter){
+        counter = parseInt(key);
+      }
+    }
+
+    key++;
+    workingModel.unitsPerMonth[key] = {};
+    workingModel.unitsPerMonth[key].name = 'Unit ' + Object.keys(this.state.model.unitsPerMonth).length.toString();
+    workingModel.unitsPerMonth[key].amount = 0;
+    workingModel.unitsPerMonth[key].amountYearly = 0;
+
+    this.setState({
+      model: workingModel
+    }, () => {
+      this.props.updateUnitsInParent(this.state.model.unitsPerMonth);
+    });
+
   }.bind(this);
 
   GenerateUnitRows = function(props){
@@ -115,7 +117,7 @@ class UnitsBox extends React.Component{
       if(typeof(this.state.model.unitsPerMonth[id].name) !== 'undefined'){
         unitRowsVisual.push(
           <tr key={count}>
-            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={id} onChange ={this.handleEditUnit} /> </td>
+            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={'unitName_'+id} onChange ={this.handleEditUnit} /> </td>
 
             <td>
               <ReactNumeric
@@ -130,11 +132,60 @@ class UnitsBox extends React.Component{
               />
             </td>
 
-            <td>${(this.state.model.unitsPerMonth[id].amount * 12).toLocaleString('en-us')}</td>
+            <td>
+              <ReactNumeric
+                name={'amountYearly_'+id}
+                value={this.state.model.unitsPerMonth[id].amountYearly}
+                currencySymbol="$"
+                minimumValue="0"
+                maximumValue="1200000000"
+                decimalCharacter="."
+                digitGroupSeparator=","
+                onChange={this.handleEditUnit}
+              />
+            </td>
+
+            <td></td>
+
+            <td onClick={() => {this.handleDeleteRow(id)}}>
+              x
+            </td>
+
           </tr>);
           count++;
         }
     });
+
+    var sum = 0,
+        vaccancyLoss = 0;
+
+    var sumRents = function() {
+      Object.keys(this.state.model.unitsPerMonth).forEach((id) => {
+        sum += parseFloat(this.state.model.unitsPerMonth[id].amount);
+      });
+
+      vaccancyLoss = sum * this.props.vaccancyPct;
+    }.bind(this);
+    sumRents();
+
+    unitRowsVisual.push(
+      <React.Fragment>
+      <tr>
+        <td><b>Less Vaccancy Loss</b></td>
+        <td>$({vaccancyLoss.toLocaleString('en-us')})</td>
+        <td>$({(vaccancyLoss * 12).toLocaleString('en-us')})</td>
+      </tr>
+
+      <tr>
+        <td><b>Gross Rental Income</b></td>
+        <td>${(sum - vaccancyLoss).toLocaleString('en-us')}</td>
+        <td>${((sum - vaccancyLoss) * 12).toLocaleString('en-us')}</td>
+      </tr>
+
+      </React.Fragment>
+
+    );
+
     return(unitRowsVisual);
   }.bind(this);
 

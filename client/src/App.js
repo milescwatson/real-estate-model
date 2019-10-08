@@ -2,7 +2,6 @@ import React from 'react';
 import './include/css/bootstrap.min.css';
 import './include/css/app.css';
 import Units from './Units';
-import LineItemGroup from './LineItemGroup';
 import Table from './Table.js';
 import Expenses from './Expenses';
 
@@ -16,7 +15,8 @@ class App extends React.Component{
         unitsPerMonth: {
           1: {
             name: 'Unit 1',
-            amount: 2300
+            amount: 2300,
+            amountYearly: 27600
           }
         },
         expenses: {
@@ -24,16 +24,16 @@ class App extends React.Component{
             name: 'Insurance',
             amount: 100,
             amountYearly: 1200,
-            yrg: 2
+            yrg: .02
           },
           2: {
             name: 'Property Tax',
             amount: 180,
             amountYearly: 2160,
-            yrg: 2
+            yrg: .02
           }
         },
-        vaccancyPct: 5,
+        vaccancyPct: .05,
         downPaymentPct: 20,
         interestRatePct: 3,
         loanLengthYears: 30,
@@ -41,7 +41,7 @@ class App extends React.Component{
         valueOfLand: 0,
         propertyManagerPercentageOfGrossRent: 5,
         incomeTaxRate: 0,
-        yearsOutComputation: 30,
+        yearsOutComputation: 31,
         initialFixedCost: 0,
         closingCostsPct: 0
       },
@@ -133,9 +133,7 @@ class App extends React.Component{
       this.setState({
         computedArrays: workingComputedArrays
       });
-
     });
-
     //now, compute everything starting at the first element of the array
   };
 
@@ -147,16 +145,19 @@ class App extends React.Component{
     const parameter = e.target.name;
     const value = e.target.value;
 
+    var workingComputedArrays = this.state.computedArrays;
+
     // TODO: fix direct state access
     if(Object.keys(valuesStoredInArrayZero).includes(parameter)){
-      this.state.computedArrays[valuesStoredInArrayZero[parameter]][0] = value;
+      workingComputedArrays[valuesStoredInArrayZero[parameter]][0] = value;
     };
 
     const initStateModel = this.state.model;
     initStateModel[parameter] = value;
 
     this.setState({
-      model: initStateModel
+      model: initStateModel,
+      computedArrays: workingComputedArrays
     }, function(){
       this.computeEverything();
     });
@@ -185,7 +186,6 @@ class App extends React.Component{
       view: initialState
     });
 
-
   }
 
   showAllVariables = () => {
@@ -210,14 +210,9 @@ class App extends React.Component{
 
   generateAllTables = () => {
     var visualObjects = [];
-    var that = this;
-    var count = 0;
 
     // https://menubar.io/reactjs-tables
     // https://dev.to/abdulbasit313/an-easy-way-to-create-a-customize-dynamic-table-in-react-js-3igg
-
-    var testJSX = <h1>test</h1>;
-    visualObjects.push(testJSX);
 
     // visualObjects.push(<table className="table table-sm table-striped table-bordered projection-table table-hover">);
     // visualObjects.push(<tr>);
@@ -275,10 +270,6 @@ class App extends React.Component{
     this.computeEverything();
   };
 
-  componentDidUpdate = function(){
-    console.log('componentDidUpdate');
-  };
-
   computeEverything = function(){
     this.showAllVariables();
     this.generateAllInputs();
@@ -295,28 +286,46 @@ class App extends React.Component{
     });
   }.bind(this);
 
-  updateExpensesCallback = function() {
-    console.log('updateExpensesCallback');
+  updateExpensesCallback = function(expensesObject) {
+    var workingModel = this.state.model;
+    workingModel.expenses = expensesObject;
+
+    this.setState({
+      model: workingModel
+    });
   }.bind(this);
 
   render(){
     return(
       <React.Fragment>
-        {this.state.view.allInputs}
+        <div class="inputs">
+          {this.state.view.allInputs}
+        </div>
 
-        <Units
-          name='Units'
-          initialUnits={this.state.model.unitsPerMonth}
-          updateUnitsInParent = {this.updateUnitsCallback}
-        />
-
-        <Expenses
-          name='Expenses'
-          initialExpenses = {this.state.model.expenses}
-          updateUnitsInParent = {this.updateExpensesCallback}
-          userViews={this.state.userViews}
-        />
-
+        <table>
+          <tbody>
+            <tr>
+              <td></td>
+              <td><b>Monthly</b></td>
+              <td><b>Annual</b></td>
+            </tr>
+            <Units
+              name='Units'
+              initialUnits={this.state.model.unitsPerMonth}
+              vaccancyPct={this.state.model.vaccancyPct}
+              updateUnitsInParent = {this.updateUnitsCallback}
+            />
+            <tr>
+            </tr>
+            <Expenses
+              name='Expenses'
+              initialExpenses = {this.state.model.expenses}
+              updateExpensesInParent = {this.updateExpensesCallback}
+              userViews={this.state.userViews}
+            />
+          </tbody>
+        </table>
+        <br />
         <Table
           yearsOutComputation={this.state.model.yearsOutComputation}
           computedArrays = {this.state.computedArrays}
