@@ -13,5 +13,5 @@ table, tr, td, th {
 
 .inputs {
   width: 20%;
-  display:-webkit-inline-box;
+  display: block;
 }

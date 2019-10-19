@@ -28,6 +28,7 @@ class Expenses extends React.Component{
         <tr>
           <th><h4>{this.props.name}</h4></th>
           <td></td>
+          <td></td>
           <td><button className='btn btn-outline-primary' style={addUnitButtonStyle} onClick={this.handleAddExpense}>Add Expense</button></td>
         </tr>
         <tr>
@@ -104,8 +105,12 @@ class Expenses extends React.Component{
         counter = parseInt(key);
       }
     }
-    key++;
 
+    if(typeof(key) === 'undefined'){
+      key = 0;
+    }
+
+    key++;
     workingModel.expenses[key] = {};
     workingModel.expenses[key].name = 'Expense ' + Object.keys(this.state.model.expenses).length.toString();
     workingModel.expenses[key].amount = 0;
@@ -141,7 +146,7 @@ class Expenses extends React.Component{
       if(typeof(this.state.model.expenses[id].amount) !== 'undefined'){
         unitRowsVisual.push(
           <tr key={count}>
-            <td><input type="text" value={this.state.model.expenses[id].name} name={'expenseName_' + id} onChange ={this.handleEditExpense} /> </td>
+            <td><input type="text" value={this.state.model.expenses[id].name} name={'expenseName_' + id} onBlur ={this.handleEditExpense} /> </td>
 
             <td>
               <ReactNumeric
@@ -149,10 +154,10 @@ class Expenses extends React.Component{
                 value={this.state.model.expenses[id].amount}
                 currencySymbol="$"
                 minimumValue="0"
-                maximumValue="10000000"
+                maximumValue="100001"
                 decimalCharacter="."
                 digitGroupSeparator=","
-                onChange={this.handleEditExpense}
+                onBlur={this.handleEditExpense}
               />
             </td>
 
@@ -162,10 +167,10 @@ class Expenses extends React.Component{
                 value={this.state.model.expenses[id].amountYearly}
                 currencySymbol="$"
                 minimumValue="0"
-                maximumValue="120000000"
+                maximumValue="1200000"
                 decimalCharacter="."
                 digitGroupSeparator=","
-                onChange={this.handleEditExpense}
+                onBlur={this.handleEditExpense}
               />
             </td>
 
@@ -174,7 +179,7 @@ class Expenses extends React.Component{
                 name={'yrg_'+id}
                 value={this.state.model.expenses[id].yrg}
                 preDefined={predefinedOptions.percentageUS2dec}
-                onChange={this.handleEditExpense}
+                onBlur={this.handleEditExpense}
               />
             </td>
 

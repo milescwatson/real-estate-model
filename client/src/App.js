@@ -1,35 +1,37 @@
 import React from 'react';
 import './include/css/bootstrap.min.css';
 import './include/css/app.css';
+import './include/css/universal.css';
 import Units from './Units';
 import Table from './Table.js';
 import Expenses from './Expenses';
+import UserView from './UserView';
 
 class App extends React.Component{
   constructor(props){
     super(props);
     this.initialState = {
       model : {
-        rentYRG: 0,
-        appreciationYRG: 1,
+        rentYRG: .02,
+        appreciationYRG: .015,
         unitsPerMonth: {
           1: {
             name: 'Unit 1',
-            amount: 2300,
-            amountYearly: 27600
+            amount: 2300.00,
+            amountYearly: 27600.00
           }
         },
         expenses: {
           1: {
             name: 'Insurance',
             amount: 100,
-            amountYearly: 1200,
+            amountYearly: 1200.00,
             yrg: .02
           },
           2: {
             name: 'Property Tax',
-            amount: 180,
-            amountYearly: 2160,
+            amount: 180.00,
+            amountYearly: 2160.00,
             yrg: .02
           }
         },
@@ -39,7 +41,7 @@ class App extends React.Component{
         loanLengthYears: 30,
         loanStartingDate: null,
         valueOfLand: 0,
-        propertyManagerPercentageOfGrossRent: 5,
+        propertyManagerPercentageOfGrossRent: .05,
         incomeTaxRate: 0,
         yearsOutComputation: 31,
         initialFixedCost: 0,
@@ -65,8 +67,8 @@ class App extends React.Component{
       },
 
       computedArrays: {
-        propertyValue: [],
-        grossRentalIncome: [], // total rents less vaccancy
+        propertyValue: [100000],
+        grossRentalIncome: [], // total rents less vaccancy - put the initial value in [0]
         netOperatingExpenses: [],
         netOperatingIncome: [],
         cashFlow: [],
@@ -78,18 +80,23 @@ class App extends React.Component{
         valueOfStockMarketInvestment: [],
         loanBalance: [],
         totalEquity: [],
-        totalPrincipalPaid: [],
+        totalPrincipalPaid: []
       },
 
       userViews: {
-        defaultView: {
-
-        }
+        defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
+        all: ['year', 'propertyValue',  'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'valueOfStockMarketInvestment', 'loanBalance', 'totalEquity', 'totalPrincipalPaid'],
+        operatingView: ['year', 'propertyValue', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow'],
+        selectedView: 'all'
       }
     }
 
     this.state = this.initialState;
   };
+
+  financialNum = (x) => {
+    return Number.parseFloat(x).toFixed(2);
+  }
 
   dotProduct = (arrays, callback) => {
     var combinedArray = [];
@@ -103,11 +110,10 @@ class App extends React.Component{
   }
 
   computeAllCompoundInterestArrays = () => {
-
-    var generateGrowthArray = (startingPoint, callback) => {
+    var generateGrowthArray = (startingPoint, yrg, callback) => {
       var returnArray = [];
       for(var i = 0; i <= this.state.model.yearsOutComputation; i++){
-        returnArray[i] = startingPoint * (Math.pow(Math.E, (this.state.model.appreciationYRG * .01) * i));
+        returnArray[i] = startingPoint * (Math.pow(Math.E, (this.state.model.appreciationYRG * yrg) * i));
       }
       callback(null, returnArray)
     };
@@ -117,11 +123,12 @@ class App extends React.Component{
     var listOfArrays = [];
 
     Object.keys(expenses).forEach((item) => {
-      generateGrowthArray(expenses[item].amount, (error, resultingArray) => {
+      generateGrowthArray(expenses[item].amount, expenses[item].yrg, (error, resultingArray) => {
         expenses[item].growthArray = resultingArray;
         listOfArrays.push(resultingArray)
       });
     });
+
     // combine all arrays into one "expenses" array
     // grab all expenses arrays
     this.dotProduct(listOfArrays, (error, resultingArray) => {
@@ -134,7 +141,27 @@ class App extends React.Component{
         computedArrays: workingComputedArrays
       });
     });
-    //now, compute everything starting at the first element of the array
+
+    // Calculate array values for propertyValue
+    generateGrowthArray(this.state.computedArrays.propertyValue[0], this.state.model.appreciationYRG, (error, resultingArray) => {
+      var workingArrays = this.state.computedArrays;
+      workingArrays.propertyValue = resultingArray;
+      this.setState({
+        computedArrays: workingArrays
+      });
+    });
+
+    // Calculate array values for grossRentalIncome
+    var sumRents = 0;
+    var sumRents = function() {
+      Object.keys(this.state.model.unitsPerMonth).forEach((id) => {
+        sum += parseFloat(this.state.model.unitsPerMonth[id].amount);
+    });
+
+    
+
+
+
   };
 
   updateModelState = (e, modelStateParameter) => {
@@ -147,8 +174,9 @@ class App extends React.Component{
 
     var workingComputedArrays = this.state.computedArrays;
 
-    // TODO: fix direct state access
+    // If this value is stored at zero
     if(Object.keys(valuesStoredInArrayZero).includes(parameter)){
+      console.log(value);
       workingComputedArrays[valuesStoredInArrayZero[parameter]][0] = value;
     };
 
@@ -158,12 +186,10 @@ class App extends React.Component{
     this.setState({
       model: initStateModel,
       computedArrays: workingComputedArrays
-    }, function(){
-      this.computeEverything();
     });
   };
 
-  generateAllInputs = () =>{
+  generateAllInputs = function(){
     var visualObjects = [];
     var that = this;
     var count = 0;
@@ -180,13 +206,20 @@ class App extends React.Component{
       }
     });
 
+    visualObjects.push(
+      <React.Fragment key = "purchase">
+        <label>Purchase Price</label> <input key="purchase" className="form-control" type="number" name="purchasePrice" onChange={this.updateModelState} />
+      </React.Fragment>
+    );
+
+
     var initialState = this.state.view;
     initialState.allInputs = visualObjects;
     this.setState({
       view: initialState
     });
 
-  }
+  }.bind(this);
 
   showAllVariables = () => {
     var visualObjects = [];
@@ -264,6 +297,8 @@ class App extends React.Component{
 
     initialComputed.closingCosts = this.state.computedArrays.propertyValue[0] * (this.state.model.closingCostsPct * .01);
     // TODO: initialComputed.loanEndingDate
+
+    //TODO: Add this stuff to state
   }
 
   componentDidMount = function(){
@@ -271,12 +306,19 @@ class App extends React.Component{
   };
 
   computeEverything = function(){
+    // console.log('computeEverything start');
     this.showAllVariables();
     this.generateAllInputs();
     this.generateAllTables();
     this.computeAllInitialValues();
     this.computeAllCompoundInterestArrays();
+    // console.log('computeEverything end');
   };
+
+  asyncComputeEverything = function(){
+    this.computeEverything();
+    // console.log('asyncComputeEverything');
+  }.bind(this);
 
   updateUnitsCallback = function(unitsObj){
     var workingModel = this.state.model;
@@ -293,14 +335,20 @@ class App extends React.Component{
     this.setState({
       model: workingModel
     });
+
   }.bind(this);
 
   render(){
     return(
       <React.Fragment>
-        <div class="inputs">
+        <div className="inputs">
           {this.state.view.allInputs}
         </div>
+
+        <UserView
+          computedArrays = {this.state.computedArrays}
+          userViews = {this.state.userViews}
+        />
 
         <table>
           <tbody>
@@ -326,10 +374,15 @@ class App extends React.Component{
           </tbody>
         </table>
         <br />
+
         <Table
           yearsOutComputation={this.state.model.yearsOutComputation}
           computedArrays = {this.state.computedArrays}
+          userViews = {this.state.userViews}
         />
+
+        <button className='btn btn-outline-primary' onClick = {this.asyncComputeEverything} >Compute Everything</button>
+
 
       </React.Fragment>
     )

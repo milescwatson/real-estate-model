@@ -28,6 +28,7 @@ class UnitsBox extends React.Component{
           <tr>
             <th><h4>{this.props.name}</h4></th>
             <td></td>
+            <td></td>
             <td><button className='btn btn-outline-primary' style={addUnitButtonStyle} onClick={this.handleAddUnit}>Add Unit</button></td>
           </tr>
           <tr>
@@ -117,18 +118,18 @@ class UnitsBox extends React.Component{
       if(typeof(this.state.model.unitsPerMonth[id].name) !== 'undefined'){
         unitRowsVisual.push(
           <tr key={count}>
-            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={'unitName_'+id} onChange ={this.handleEditUnit} /> </td>
-
+            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={'unitName_'+id} onBlur ={this.handleEditUnit} /> </td>
+            
             <td>
               <ReactNumeric
                 name={'amount_'+id}
                 value={this.state.model.unitsPerMonth[id].amount}
                 currencySymbol="$"
                 minimumValue="0"
-                maximumValue="10000000"
+                maximumValue="100001"
                 decimalCharacter="."
                 digitGroupSeparator=","
-                onChange={this.handleEditUnit}
+                onBlur={this.handleEditUnit}
               />
             </td>
 
@@ -138,10 +139,10 @@ class UnitsBox extends React.Component{
                 value={this.state.model.unitsPerMonth[id].amountYearly}
                 currencySymbol="$"
                 minimumValue="0"
-                maximumValue="1200000000"
+                maximumValue="1200000"
                 decimalCharacter="."
                 digitGroupSeparator=","
-                onChange={this.handleEditUnit}
+                onBlur={this.handleEditUnit}
               />
             </td>
 
@@ -169,7 +170,7 @@ class UnitsBox extends React.Component{
     sumRents();
 
     unitRowsVisual.push(
-      <React.Fragment>
+      <React.Fragment key="gri/vaccancyloss">
       <tr>
         <td><b>Less Vaccancy Loss</b></td>
         <td>$({vaccancyLoss.toLocaleString('en-us')})</td>
