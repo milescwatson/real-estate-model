@@ -10,7 +10,8 @@ var express = require('express'),
     session = require('session'),
     LocalStrategy = require('passport-local').Strategy,
     authentication = require('./authenticate'),
-    port = 3000;
+    amortization = require('./computation/amortization'),
+    port = 3001;
 
 app.use(bodyParser.json());
 app.use(require('body-parser').urlencoded({ extended: true }));
@@ -37,6 +38,8 @@ app.post('/create-user', authentication.createUser);
 app.get('/health', function(request, response, next) {
 	  response.send('{"status": "healthy"}');
 });
+
+app.post('/amortization-object', amortization.returnAmortizationObject);
 
 app.use(express.static(__dirname + '/../frontend'));
 

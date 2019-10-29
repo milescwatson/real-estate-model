@@ -1,0 +1,8 @@
+build
+dist/*.standalone.*
+node_modules
+coverage-report.html
+*.tgz
+test/generated
+.idea
+tmp

@@ -118,8 +118,8 @@ class UnitsBox extends React.Component{
       if(typeof(this.state.model.unitsPerMonth[id].name) !== 'undefined'){
         unitRowsVisual.push(
           <tr key={count}>
-            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={'unitName_'+id} onBlur ={this.handleEditUnit} /> </td>
-            
+            <td><input type="text" value={this.state.model.unitsPerMonth[id].name} name={'unitName_'+id} onBlur={this.handleEditUnit} /> </td>
+
             <td>
               <ReactNumeric
                 name={'amount_'+id}
@@ -197,4 +197,4 @@ class UnitsBox extends React.Component{
   }
 }
 
-export default UnitsBox
+export default UnitsBox;
