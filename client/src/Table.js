@@ -1,10 +1,16 @@
 import React from 'react';
+import './include/css/bootstrap.min.css';
+import './include/css/table.css';
+import './include/css/universal.css';
+
+import { Tab, Tabs } from "@blueprintjs/core";
 
 class Table extends React.Component {
   constructor(props){
     super(props);
     this.initialState = {
-      computedArrays: props.computedArrays
+      computedArrays: props.computedArrays,
+      selectedView: 'advanced-table'
     };
     this.state = this.initialState;
   }
@@ -13,6 +19,7 @@ class Table extends React.Component {
     return Number.parseFloat(x).toFixed(2);
   }
   generateFinancialString = (x) => {
+    // return x;
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
@@ -60,18 +67,39 @@ class Table extends React.Component {
     return(returnJSX);
   }.bind(this);
 
-  render(){
+  CombinedTable = function(props){
     return(
-
-      <table>
+      <>
+      <br />
+      <table className="table table-hover table-sm table-responsive">
         <thead>
         <this.TableHead />
         </thead>
         <tbody>
           <this.TableBody />
         </tbody>
-
       </table>
+      </>
+    )
+
+  }.bind(this)
+
+  SimpleTable = function(props){
+    return(
+      <h4>Simple Table</h4>
+    )
+  }
+
+  render(){
+    return(
+      <React.Fragment>
+        <div className = "table-container">
+          <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
+            <Tab id="advanced-table" title="Advanced Table" panel={<this.CombinedTable />} />
+            <Tab id="simple-table" title="Simple Table" panel={<this.SimpleTable />} />
+          </Tabs>
+        </div>
+      </React.Fragment>
     )
   }
 

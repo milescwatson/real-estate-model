@@ -21,6 +21,13 @@ var asyncAmortizationObject = function(requestObject, callback){
     operations[operation].push(0);
     for (var year = 1; year < requestObject.yearsOutComputation; year++){
       operations[operation].push();
+      switch (operation) {
+        case expression:
+
+          break;
+        default:
+
+      }
     }
     //fin[key]();
   }

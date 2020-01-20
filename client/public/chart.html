@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Chart Dev.</title>
+  </head>
+  <body>
+    <div style="width:1000px; height:500px;margin-left:80px" id="chart"></div>
+
+    <script src='d3.min.js'></script>
+    <script>
+    var width = 500,
+        height = 500,
+        margin = {top: 20, right: 20, bottom: 30, left: 100},
+        data =  [200045.0050628797, 200090.02025303783, 200135.0455727533, 200180.08102430546, 200225.12660997428, 200270.18233204016, 200315.2481927841, 200360.32419448753, 200405.4103394324, 200450.50662990115, 200495.6130681769, 200540.72965654312, 200585.85639728376, 200630.99329268347, 200676.14034502726, 200721.2975566007, 200766.46492968986, 200811.64246658134, 200856.83016956225, 200902.02804092027, 200947.2360829435, 200992.45429792054, 201037.6826881407, 201082.92125589354, 201128.1700034693, 201173.42893315878, 201218.6980472531, 201263.97734804402, 201309.26683782387, 201354.5665188854, 201399.8763935219, 201445.1964640272, 201490.52673269555, 201535.86720182194, 201581.2178737016]
+
+    var svg = d3.select('#chart')
+              .append('svg')
+              .attr("viewBox", [0, 0, width, height]);
+
+    var xScale = d3.scaleLinear()
+                .domain([0, data.length])
+                .range([margin.left, width-margin.right])
+
+    var yScale = d3.scaleLinear()
+                 .domain([data[0], data[data.length-1]])
+                 .range([height-margin.bottom, margin.top]);
+
+    var xAxis = d3.axisBottom(xScale)
+                .tickSizeOuter(0);
+
+    var yAxis = d3.axisLeft(yScale);
+
+    svg.append('g')
+        .call(xAxis)
+        .attr('transform', `translate(0, ${height-margin.bottom})`);
+
+    svg.append('g')
+        .call(yAxis)
+        .attr('transform', `translate(${margin.left}, 0)`);
+
+    var line = d3.line()
+              .x(function(d){
+                var index = arguments[1];
+                // console.log('x = ', index);
+                // return index;
+                return(xScale(index));
+              })
+              .y(function(d){
+                return(yScale(d));
+                // var index = arguments[1];
+                // console.log('y = ', d);
+                // return d;
+              });
+
+    svg.append('path')
+          .datum(data)
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-linecap", "round")
+          .attr("d", line)
+    </script>
+    <div>
+  </body>
+</html>

@@ -1,25 +1,30 @@
-import React from 'react';
+import React, {useState} from 'react';
+import { Button, Icon, Intent } from "@blueprintjs/core";
+// import { IconNames } from "@blueprintjs/icons";
 import './include/css/bootstrap.min.css';
 import './include/css/app.css';
 import './include/css/universal.css';
-import Units from './Units';
 import Table from './Table.js';
-import Expenses from './Expenses';
 import UserView from './UserView';
-import computation from './include/computation/compute';
+import compute from './include/computation/compute';
+import ChartContainer from './ChartContainer';
+import Metric from './Metric.js';
+import NumberFormat from 'react-number-format';
+import InputContainer from './InputContainer';
+
+import _ from 'lodash';
 
 class App extends React.Component{
   constructor(props){
     super(props);
     this.initialState = {
       model : {
-        rentYRG: .02,
-        appreciationYRG: .015,
-        unitsPerMonth: {
+        rentYRG: 0.02,
+        appreciationYRG: 0.015,
+        units: {
           1: {
             name: 'Unit 1',
-            amount: 2300.00,
-            amountYearly: 27600.00
+            rentPerMonth: 2300.00,
           }
         },
         expenses: {
@@ -36,17 +41,28 @@ class App extends React.Component{
             yrg: .02
           }
         },
-        vaccancyPct: .05,
-        downPaymentPct: .2,
-        interestRatePct: .03,
+        stockYRG: 0.06,
+        vaccancyPct: 0.05,
+        downPaymentPct: 0.2,
+        interestRatePct: 0.03,
         loanStartingDate: null,
-        valueOfLand: 0,
-        propertyManagerPercentageOfGrossRent: .05,
+        valueOfLand: 40000,
+        propertyManagerPercentageOfGrossRent: 0.05,
         incomeTaxRate: 0,
         yearsOutComputation: 35,
         loanLengthYears: 30,
         initialFixedCost: 0,
-        closingCostsPct: 0.05
+        depreciateOver: 25,
+        maxWriteoffPerYear: 15000
+      },
+      // used to store the state of input components - these values are re-computed as decimal percents and stored in the main model
+      visualModel: {
+        stockYRG: null,
+        vaccancyPct: null,
+        downPaymentPct: null,
+        interestRatePct: null,
+        propertyManagerPercentageOfGrossRent: null,
+        incomeTaxRate: null
       },
 
       view: {
@@ -54,16 +70,12 @@ class App extends React.Component{
       },
 
       computed: {
-        loanValue: null,
         loanEndingDate: null,
-        cap: 0,
-        grm: 0,
-        closingCosts: 0
       },
 
       computedArrays: {
         propertyValue: [200000],
-        grossRentalIncome: [], // total rents less vaccancy - put the initial value in [0]
+        grossRentalIncome: [], // total rents less vaccancy - put the initial value in [1]
         netOperatingExpenses: [],
         netOperatingIncome: [],
         cashFlow: [],
@@ -73,16 +85,17 @@ class App extends React.Component{
         valueOfRealEstateInvestment: [],
         valueOfRealEstateInvestmentIncludingWriteoffs: [],
         valueOfStockMarketInvestment: [],
-        loanBalance: [],
+        remainingBalance: [],
         totalEquity: [],
-        ipmts: [],
-        cumPrinc: [],
-        pmt: []
+        annualInterest: [],
+        cumPrincipal: [],
+        cumInterest: [],
+        paymentsAnnualized: []
       },
 
       userViews: {
         defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
-        all: ['year', 'pmt', 'ipmts', 'cumPrinc', 'propertyValue',  'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'totalEquity', 'loanBalance', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'valueOfStockMarketInvestment'],
+        all: ['year', 'propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'remainingBalance', 'totalEquity', 'cumPrincipal', 'cumInterest', 'annualInterest', 'paymentsAnnualized', 'valueOfStockMarketInvestment'],
         operatingView: ['year', 'propertyValue', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow'],
         selectedView: 'all'
       }
@@ -93,15 +106,16 @@ class App extends React.Component{
   financialNum = function(x){
     return Number.parseFloat(x).toFixed(2);
   };
+
   computeAllCompoundInterestArrays = () => {
-    computation.asyncComputeArrays(this.state.model, this.state.computedArrays, (error, result) => {
+    compute.asyncComputeArraysIncomeStatement(this.state.model, this.state.computedArrays, (error, result) => {
       this.setState({
         computedArrays: result
       });
     });
   };
   computeAllInitialValues = () => {
-    computation.asyncComputeInitial(this.state.model, this.state.computed, this.state.computedArrays, (error, computedResult) => {
+    compute.asyncComputeInitial(this.state.model, this.state.computed, this.state.computedArrays, (error, computedResult) => {
       this.setState({
         computed: computedResult
       });
@@ -118,9 +132,9 @@ class App extends React.Component{
 
     var workingComputedArrays = this.state.computedArrays;
 
-    // If this value is stored at zero
+    // If this value is stored at array sub 1
     if (Object.keys(valuesStoredInArrayZero).includes(parameter)) {
-      workingComputedArrays[valuesStoredInArrayZero[parameter]][0] = value;
+      workingComputedArrays[valuesStoredInArrayZero[parameter]][1] = value;
     };
 
     const initStateModel = this.state.model;
@@ -132,81 +146,603 @@ class App extends React.Component{
     });
   };
 
-  generateAllInputs = function(){
-    var visualObjects = [];
-    var that = this;
-    var count = 0;
-
-    Object.keys(this.state.model).forEach(function(item){
-      if(typeof(that.state.model[item]) !== 'object'){
-        visualObjects.push(
-          <div key={count}>
-            <label>{item}: </label>
-            <input className="form-control" type="number" name={item} onChange={that.updateModelState} />
-          </div>
-        );
-        count++;
-      }
-    });
-
-    visualObjects.push(
-      <React.Fragment key = "purchase">
-        <label>Purchase Price</label> <input key="purchase" className="form-control" type="number" name="purchasePrice" onChange={this.updateModelState} />
-      </React.Fragment>
-    );
-
-    var initialState = this.state.view;
-    initialState.allInputs = visualObjects;
-    this.setState({
-      view: initialState
-    });
-
-  }.bind(this);
-
-  showAllVariables = () => {
-    var visualObjects = [],
-        count = 0;
-
-    Object.keys(this.state.model).forEach( (item) => {
-      if(typeof(this.state.model[item]) !== 'object'){
-        visualObjects.push(<p key={count}> {item}: {this.state.model[item]} </p>);
-        count++;
-      }
-    });
-
-    var initialState = this.state.view;
-    initialState.allVariables = visualObjects;
-    this.setState({
-      view: initialState
-    });
-
-  };
-
   componentDidMount = function(){
     this.computeEverything();
   };
 
   computeEverything = function(){
+    // this.computeAllCompoundInterestArrays();
+    // this.computeAllInitialValues();
     this.computeAllCompoundInterestArrays();
-    this.computeAllInitialValues();
-    this.showAllVariables();
-    this.generateAllInputs();
   }.bind(this);
 
-  updateUnitsCallback = function(unitsObj){
-    var workingModel = this.state.model;
-    workingModel.unitsPerMonth = unitsObj;
-    this.setState({
-      model: workingModel
-    });
+  IncomeStatement = function(){
+    var unitRowsVisual = [],
+        expenseRowsVisual = [];
+
+    var handleAddUnit = function(){
+      var workingModel = this.state.model;
+
+      if(this.state.model.units === 'undefined'){
+        workingModel.units = {}
+      }
+
+      var index = Math.max(...Object.keys(workingModel.units)) + 1;
+      if(Object.keys(this.state.model.units).length === 0){
+        index = 1;
+      }
+
+      var newBlankUnit = {
+        name: 'Unit ' + index,
+        rentPerMonth: 0.00
+      };
+      workingModel.units[index] = newBlankUnit;
+
+      this.setState({
+        model: workingModel
+      }, this.computeEverything());
+
+    }.bind(this);
+
+    var handleAddExpense = function(){
+      var workingModel = this.state.model;
+
+      if(this.state.model.expenses === 'undefined'){
+        workingModel.expenses = {}
+      }
+
+      var index = Math.max(...Object.keys(workingModel.expenses)) + 1;
+      if(Object.keys(this.state.model.expenses).length === 0){
+        index = 1;
+      }
+
+      var blankExpense = {
+        amount:0,
+        amountYearly:0,
+        yrg: 0.02,
+        name: 'Expense ' + index,
+      }
+      workingModel.expenses[index] = blankExpense;
+      this.setState({
+        model: workingModel
+      }, this.computeEverything());
+    }.bind(this);
+
+    var handleDeleteRow = function(dataType, id){
+      var workingModel = this.state.model;
+      if(dataType === 'units'){
+        delete workingModel.units[id];
+      }else if (dataType === 'expense'){
+        delete workingModel.expenses[id];
+      }
+
+      this.setState({
+        model: workingModel
+      }, this.computeEverything());
+    }.bind(this);
+
+    var handleEditNumber = function(value, id){
+      this.setState((previousState) => {
+        previousState.model.units[id].rentPerMonth = value.floatValue;
+        return({
+          model: previousState.model
+        });
+      }, this.computeEverything());
+    }.bind(this);
+
+    var handleEditRow = function(event, dataType){
+      var input = event.target.name.split('_'),
+          name = input[0],
+          id = input[1],
+          workingModel = this.state.model;
+
+      if(dataType === 'units'){
+        switch (name) {
+          case 'unitName':
+            workingModel.units[id].name = event.target.value;
+            break;
+          case 'unitRentPerMonth':
+            var rentValue = event.target.value
+            if(rentValue[0] === '$'){
+              rentValue = rentValue.substr(1);
+            }
+            workingModel.units[id].rentPerMonth = parseFloat(rentValue);
+            break;
+          case 'unitRentPerYear':
+            break;
+          default:
+            break;
+        }
+      }
+
+      this.setState({
+        model: workingModel
+      }, this.computeEverything())
+    }.bind(this);
+
+    var handleEditYRG = function(value,id){
+      this.setState((workingState) => {
+        workingState.model.expenses[id].yrg = value.floatValue/100;
+        return({
+          model: workingState.model
+        })
+      }, this.computeEverything())
+    }.bind(this);
+
+    var GenerateUnitRows = function(){
+          var index = Object.keys(this.state.model.units).length;
+          Object.keys(this.state.model.units).forEach((id) => {
+                if(typeof(this.state.model.units[id].name) !== 'undefined'){
+                  unitRowsVisual.push(
+                    <tr key={index}>
+                      <td><input type="text" value={this.state.model.units[id].name} onChange={(event) => {handleEditRow(event, 'units')}} name={'unitName_'+id} /></td>
+
+                      <td>
+                          <NumberFormat
+                            value={this.state.model.units[id].rentPerMonth}
+                            onValueChange={(value) => {
+                              handleEditNumber(value, id);
+                            }}
+                            name={'unitRentPerMonth_'+id}
+                            thousandSeparator={true} prefix={'$'}
+                            allowNegative = {false}
+                            defaultValue = {0}
+                            fixedDecimalScale = {true}
+                            decimalScale = {2}
+                          />
+                      </td>
+
+                      <td>
+                      <NumberFormat
+                        value={this.state.model.units[id].rentPerMonth * 12}
+                        name={'rentPerYearDisplay'+id}
+                        thousandSeparator={true} prefix={'$'}
+                        defaultValue = {0}
+                        fixedDecimalScale = {true}
+                        decimalScale = {2}
+                        displayType = {'text'}
+                      />
+
+                      </td>
+
+                      <td name={'thisIStheID'} onClick={() => {handleDeleteRow('units', id)}}>
+                        <Icon icon={'remove'} intent="danger" />
+                      </td>
+                    </tr>
+                  )
+                  index++;
+                }
+          });
+    }.bind(this);
+
+    var handleEditExpenseNumber = function(event){
+      var input = event.target.name.split('_'),
+          name = input[0],
+          id = input[1],
+          value = event.target.value;
+
+          value = value.replace(/[, ]+/g, "").trim();
+          if(value[0] === '$'){
+            value = value.substr(1);
+          }
+          value = parseFloat(value);
+
+      switch (name) {
+        case 'unitExpensePerMonth':
+          this.setState((workingState)=>{
+            workingState.model.expenses[id].amount = parseFloat(value);
+            workingState.model.expenses[id].amountYearly = parseFloat(value * 12);
+            return({
+              model: workingState.model
+            });
+          }, this.computeEverything());
+          break;
+        case 'unitExpensePerYear':
+          this.setState((workingState)=>{
+            workingState.model.expenses[id].amountYearly = parseFloat(value);
+            workingState.model.expenses[id].amount = parseFloat(value / 12);
+            return({
+              model: workingState.model
+            });
+          }, this.computeEverything());
+          break;
+        default:
+          break;
+      }
+    }.bind(this);
+
+    var GenerateExpenseRows = function(){
+      var index = Object.keys(this.state.model.expenses).length;
+
+      Object.keys(this.state.model.expenses).forEach((id) => {
+        if(typeof(this.state.model.expenses[id] !== 'undefined')){
+          expenseRowsVisual.push(
+            <tr key={index}>
+              <td><input type="text" value={this.state.model.expenses[id].name} onChange={(event) => {handleEditRow(event, 'expense')}} name={'expenseName_'+id} /></td>
+            <td>
+                <NumberFormat
+                  value={this.state.model.expenses[id].amount}
+                  onBlur={(event) => {
+                    handleEditExpenseNumber(event);
+                  }}
+                  name={'unitExpensePerMonth_'+id}
+                  thousandSeparator={true} prefix={'$'}
+                  allowNegative = {false}
+                  defaultValue = {0}
+                  fixedDecimalScale = {true}
+                  decimalScale = {2}
+                />
+            </td>
+
+            <td>
+                <NumberFormat
+                  value={this.state.model.expenses[id].amountYearly}
+                  onBlur={(event) => {
+                    handleEditExpenseNumber(event);
+                  }}
+                  name={'unitExpensePerYear_'+id}
+                  thousandSeparator={true} prefix={'$'}
+                  allowNegative = {false}
+                  defaultValue = {0}
+                  fixedDecimalScale = {true}
+                  decimalScale = {2}
+                />
+            </td>
+
+            <td>
+              <NumberFormat
+                value={this.state.model.expenses[id].yrg*100}
+                onValueChange={(value) => {handleEditYRG(value, id)}}
+                name={'yrg_'+id}
+                thousandSeparator={true} suffix={'%'}
+                allowNegative = {false}
+                defaultValue = {2.0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+              />
+            </td>
+
+            <td onClick={()=> {
+                handleDeleteRow('expense', id);
+              }}>
+              <Icon icon={'remove'} intent="danger" />
+            </td>
+
+            </tr>
+          );
+        }
+        index++;
+      })
+    }.bind(this);
+
+    GenerateUnitRows();
+    GenerateExpenseRows();
+
+    var getDebtServiceString = function(){
+      if(this.state.computedArrays.paymentsAnnualized[1] === 'undefined' || isNaN(this.state.computedArrays.paymentsAnnualized[1])){
+        return(0.00);
+      }else{
+        return(this.state.computedArrays.paymentsAnnualized[1]);
+      }
+    }.bind(this);
+
+    var sumRents = function(){
+      var sumRents = 0;
+      _.each(this.state.model.units, (unit, key)=>{
+        sumRents += unit.rentPerMonth
+      });
+      return sumRents;
+    }.bind(this);
+
+    return(
+      <React.Fragment>
+        <h3>Income Statement</h3>
+        <table className="table table-hover table-sm">
+          <tbody>
+          <tr>
+            <td><h5>Units</h5></td>
+            <td>Monthly</td>
+            <td>Annual</td>
+            <td onClick={handleAddUnit}>
+              <Button text="Add Unit" intent="primary" rightIcon="plus" />
+            </td>
+          </tr>
+          {unitRowsVisual}
+          <tr>
+            <td>Total</td>
+            <td>
+
+              <NumberFormat
+                value = {this.state.computedArrays.grossRentalIncome[0] }
+                name={'totalRents_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+
+            </td>
+            <td>
+              <NumberFormat
+                value = {this.state.computedArrays.grossRentalIncome[0] * 12}
+                name={'totalRents_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Less Vaccancy Loss ({this.state.model.vaccancyPct*100}%)
+            </td>
+            <td>
+              <NumberFormat
+                value = {sumRents() - this.state.computedArrays.grossRentalIncome[0]}
+                name={'vaccancyLossMonthly_'}
+                thousandSeparator={true}
+                prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+            <td>
+              <NumberFormat
+                value = {(sumRents() - this.state.computedArrays.grossRentalIncome[0]) * 12}
+                name={'vaccancyLossAnnual_'}
+                thousandSeparator={true}
+                prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+          </tr>
+
+          <tr>
+            <td>Gross Rental Income</td>
+            <td>
+              <NumberFormat
+                value = {this.state.computedArrays.grossRentalIncome[0] }
+                name={'griMonth_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+            <td>
+              <NumberFormat
+                value = {this.state.computedArrays.grossRentalIncome[0] * 12}
+                name={'griAnnual_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><h5>Expenses</h5></td>
+            <td></td>
+            <td></td>
+            <td>Rate of Growth</td>
+            <td onClick={handleAddExpense}>
+                <Button text="Add Expense" intent="primary" rightIcon="plus" />
+            </td>
+          </tr>
+          {expenseRowsVisual}
+
+          <tr>
+            <td>Property Management Expense</td>
+            <td>
+              <NumberFormat
+                value = { (this.state.computedArrays.grossRentalIncome[1] * this.state.model.propertyManagerPercentageOfGrossRent) }
+                name={'pmMonth'}
+                thousandSeparator={true}
+                prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+            <td>
+              <NumberFormat
+                value = { (this.state.computedArrays.grossRentalIncome[1] * this.state.model.propertyManagerPercentageOfGrossRent) * 12 }
+                name={'pmYear'}
+                thousandSeparator={true}
+                prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+          </tr>
+
+          <tr>
+            <td>Net Operating Expenses</td>
+
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.netOperatingExpenses[0] }
+                name={'noeMonth'}
+                thousandSeparator={true}
+                prefix={'$('} suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.netOperatingExpenses[0] * 12 }
+                name={'noeAnn_'}
+                thousandSeparator={true}
+                prefix={'$('} suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+          </tr>
+
+          <tr>
+            <td>Net Operating Income</td>
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.netOperatingIncome[0]}
+                name={'noi_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.netOperatingIncome[0] * 12 }
+                name={'noiYear_'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+
+          </tr>
+
+          <tr>
+            <td>Debt Service</td>
+            <td>
+              <NumberFormat
+                value={Math.abs(getDebtServiceString())}
+                thousandSeparator={true} prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType={'text'}
+              />
+            </td>
+
+            <td>
+              <NumberFormat
+                value={Math.abs(getDebtServiceString()*12)}
+                thousandSeparator={true} prefix={'$('}
+                suffix={')'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType={'text'}
+              />
+            </td>
+
+          </tr>
+
+          <tr>
+            <td>Cashflow</td>
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.cashFlow[0] }
+                name={'cashflow'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+            <td>
+              <NumberFormat
+                value = { this.state.computedArrays.cashFlow[0] * 12 }
+                name={'cashflowYear'}
+                thousandSeparator={true}
+                prefix={'$'}
+                defaultValue = {0}
+                fixedDecimalScale = {true}
+                decimalScale = {2}
+                displayType = {'text'}
+              />
+            </td>
+          </tr>
+
+        </tbody>
+        </table>
+      </React.Fragment>
+    );
   }.bind(this);
 
-  updateExpensesCallback = function(expensesObject) {
-    var workingModel = this.state.model;
-    workingModel.expenses = expensesObject;
+  // update inputContainer values callback
+  // check if this is neccesary
+  updateParametersCallback = function(value, param){
+    var updateIndividualParameter = function(param){
+      this.setState((previousState) => {
+        previousState.model[param] = value;
+        return({
+          model: previousState.model
+        });
+      });
+    }.bind(this)
 
-    this.setState({
-      model: workingModel
+    switch (param) {
+      case 'purchasePrice':
+        var workingComputedArrays = this.state.computedArrays;
+        workingComputedArrays.propertyValue[0] = value;
+
+        this.setState({
+          computedArrays: workingComputedArrays
+        }, () => {
+          this.computeEverything();
+        });
+        break;
+      case 'loanLengthYears':
+        updateIndividualParameter('loanLengthYears');
+        break;
+      default:
+        break;
+    }
+  }.bind(this);
+
+  // updates parameter model
+  updateParameter = function(parameter, value){
+    console.log('up: ', parameter, value);
+
+    this.setState((previousState)=>{
+      previousState.model[parameter] = value;
+      return({
+        model: previousState.model
+      });
     });
 
   }.bind(this);
@@ -214,55 +750,113 @@ class App extends React.Component{
   render(){
     return(
       <React.Fragment>
-        <b>Propety value: $</b> {this.financialNum(this.state.computedArrays.propertyValue[0])}
-        <br />
-        <b>Loan value: $</b> {this.financialNum(this.state.computed.loanValue)}
-        <br />
-        <b>Loan interest rate: $</b> {this.financialNum(this.state.model.interestRatePct)}
-        <br />
+        <div className="container">
 
-        <br />
+          <div className="row">
+              <h1>Rental Property Investment Analysis</h1>
+          </div>
 
-        <UserView
-          computedArrays = {this.state.computedArrays}
-          userViews = {this.state.userViews}
-        />
+          <div className="row">
+            <div className="col-3">
 
-        <table>
-          <tbody>
-            <tr>
-              <td></td>
-              <td><b>Monthly</b></td>
-              <td><b>Annual</b></td>
-            </tr>
-            <Units
-              name='Units'
-              initialUnits={this.state.model.unitsPerMonth}
-              vaccancyPct={this.state.model.vaccancyPct}
-              updateUnitsInParent = {this.updateUnitsCallback}
-            />
-            <tr>
-            </tr>
-            <Expenses
-              name='Expenses'
-              initialExpenses = {this.state.model.expenses}
-              updateExpensesInParent = {this.updateExpensesCallback}
-              userViews={this.state.userViews}
-            />
-          </tbody>
-        </table>
-        <br />
+              <InputContainer
+                purchasePrice = {this.state.computedArrays.propertyValue[0]}
+                appModel = {this.state.model}
+                loanLengthYears = {this.state.model.loanLengthYears}
+                valueOfLand = {this.state.model.valueOfLand}
+                yearsOutComputation = {this.state.model.yearsOutComputation}
+                depreciateOver = {this.state.model.depreciateOver}
+                maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
 
-        <Table
-          yearsOutComputation={this.state.model.yearsOutComputation}
-          computedArrays = {this.state.computedArrays}
-          userViews = {this.state.userViews}
-          loanLengthYears = {this.state.model.loanLengthYears}
-        />
+                updateParametersCallback = {this.updateParametersCallback}
+                updateParameterCallback = {this.updateParameter}
+              />
 
-      <button className='btn btn-outline-primary' onClick = {this.computeEverything} >Compute Everything</button>
+            </div>
+              <ChartContainer
+                data={this.state.computedArrays.propertyValue}
+                valueOfStockMarketInvestment = {this.state.computedArrays.valueOfStockMarketInvestment}
+              />
+          </div>
+
+          <div className="row">
+            <div className="info-container any-container col-12">
+              <h3>Key Metrics</h3>
+
+              <Metric
+                value={(this.state.computedArrays.netOperatingIncome[1]*12) / this.state.computedArrays.propertyValue[1]}
+                label={'Cap Rate'}
+                hint={'NOI / Purchase Price'}
+                range={[0,10]}
+                colorProgression={['#721c24','#856404','#155724']}
+                highPositive={true}
+                prefix={''}
+                postfix={'%'}
+              />
+
+              <Metric
+                value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
+                label={'Gross Rent Multiplier'}
+                hint={'PP / GRI'}
+                range={[0,10]}
+                colorProgression={['#721c24','#856404','#155724']}
+                highPositive={true}
+                prefix={''}
+              />
+
+              <Metric
+                value={(this.state.computedArrays.cashFlow[0] * 12) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                label={'Cash-On-Cash Return'}
+                hint={'pre-tax cash flow / cash invested (down payment)'}
+                range={[0,10]}
+                colorProgression={['#721c24','#856404','#155724']}
+                highPositive={true}
+                prefix={''}
+                postfix={'%'}
+              />
+
+              <Metric
+                value={this.state.computedArrays.cashFlow[0]}
+                label={'First Year Cashflow'}
+                hint={'pre-tax cash flow / cash invested (down payment)'}
+                range={[0,0]}
+                colorProgression={['#721c24','#856404','#155724']}
+                highPositive={true}
+                prefix={'$'}
+              />
+
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="input-container any-container col-12">
+              <this.IncomeStatement />
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="col-12">
+              <Table
+                yearsOutComputation={this.state.model.yearsOutComputation}
+                computedArrays = {this.state.computedArrays}
+                userViews = {this.state.userViews}
+                loanLengthYears = {this.state.model.loanLengthYears}
+              />
+            </div>
+          </div>
+
+        </div>
+
+          <UserView
+            computedArrays = {this.state.computedArrays}
+            userViews = {this.state.userViews}
+          />
+          <br />
+
+        <button className='btn btn-outline-primary' onClick = {this.computeEverything} >Compute Everything</button>
 
       </React.Fragment>
+
     )
   }
 }

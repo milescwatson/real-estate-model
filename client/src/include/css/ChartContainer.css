@@ -1,0 +1,42 @@
+.chart-container {
+  width: 96%;
+  border: 1px solid green;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tab-item {
+  margin: 0px 20px 0px 20px;
+}
+.tab-item:hover {
+  border-bottom: 4px solid #4189d0 !important;
+}
+
+.tab-underlined {
+  border-bottom: 4px solid #4189d0 !important;
+}
+
+.header-tabs {
+  text-align: center;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  font-size: 14pt;
+  font-weight: bold;
+  color: #4189d0;
+}
+
+button, input[type="submit"], input[type="reset"] {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: none;
+}
+
+button:focus {
+  border-color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  outline: none;
+}

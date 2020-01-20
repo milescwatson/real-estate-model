@@ -1,0 +1,29 @@
+.any-container {
+  padding: 5px;
+  width: 96%;
+  border: 1px solid green;
+  margin-top:1%;
+  margin-bottom: 1%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chart-svg {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
+  border: 1px solid blue;
+}
+
+.container-fluid {
+  margin: 3%;
+  overflow:visible ;
+  border: 10px solid green;
+}
+
+@import "~normalize.css";
+@import "~@blueprintjs/core/lib/css/blueprint.css";
+@import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
