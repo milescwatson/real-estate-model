@@ -56,7 +56,7 @@ class ChartContainer extends React.Component{
         <PropertyValueChart
           data={this.props.data}
           valueOfStockMarketInvestment = {this.props.valueOfStockMarketInvestment}
-          width={1000}
+          width={800}
           height={600}
         />
       </React.Fragment>
@@ -77,21 +77,24 @@ class ChartContainer extends React.Component{
     })
   }.bind(this);
 
+  // put this in pv chart
+  getWidth = function(){
+    var width = document.getElementsByClassName('chartc')[0].offsetWidth;
+    return(width);
+  }.bind(this);
+
   render() {
     return(
       <React.Fragment>
-            <div className="col-9">
+            <div className="col-9 chartc">
               <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
                 <Tab id="value" title="Value" panel={<this.ValueChart />} />
                 <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />
               </Tabs>
             </div>
-
       </React.Fragment>
     )
-
   }
-
 }
 
 export default ChartContainer;

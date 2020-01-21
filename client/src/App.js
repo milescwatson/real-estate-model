@@ -48,7 +48,7 @@ class App extends React.Component{
         loanStartingDate: null,
         valueOfLand: 40000,
         propertyManagerPercentageOfGrossRent: 0.05,
-        incomeTaxRate: 0,
+        incomeTaxRate: 0.3,
         yearsOutComputation: 35,
         loanLengthYears: 30,
         initialFixedCost: 0,
@@ -279,6 +279,7 @@ class App extends React.Component{
 
                       <td>
                           <NumberFormat
+                            className={"bp3-input"}
                             value={this.state.model.units[id].rentPerMonth}
                             onValueChange={(value) => {
                               handleEditNumber(value, id);
@@ -361,6 +362,7 @@ class App extends React.Component{
               <td><input type="text" value={this.state.model.expenses[id].name} onChange={(event) => {handleEditRow(event, 'expense')}} name={'expenseName_'+id} /></td>
             <td>
                 <NumberFormat
+                  className = {'bp3-input'}
                   value={this.state.model.expenses[id].amount}
                   onBlur={(event) => {
                     handleEditExpenseNumber(event);
@@ -376,6 +378,7 @@ class App extends React.Component{
 
             <td>
                 <NumberFormat
+                  className = {'bp3-input'}
                   value={this.state.model.expenses[id].amountYearly}
                   onBlur={(event) => {
                     handleEditExpenseNumber(event);
@@ -391,6 +394,7 @@ class App extends React.Component{
 
             <td>
               <NumberFormat
+                className = {'bp3-input'}
                 value={this.state.model.expenses[id].yrg*100}
                 onValueChange={(value) => {handleEditYRG(value, id)}}
                 name={'yrg_'+id}
@@ -483,7 +487,7 @@ class App extends React.Component{
             </td>
             <td>
               <NumberFormat
-                value = {sumRents() - this.state.computedArrays.grossRentalIncome[0]}
+                value = {(this.state.computedArrays.grossRentalIncome[0] * this.state.model.vaccancyPct)}
                 name={'vaccancyLossMonthly_'}
                 thousandSeparator={true}
                 prefix={'$('}
@@ -496,7 +500,7 @@ class App extends React.Component{
             </td>
             <td>
               <NumberFormat
-                value = {(sumRents() - this.state.computedArrays.grossRentalIncome[0]) * 12}
+                value = {(this.state.computedArrays.grossRentalIncome[0] * this.state.model.vaccancyPct) * 12}
                 name={'vaccancyLossAnnual_'}
                 thousandSeparator={true}
                 prefix={'$('}
@@ -736,7 +740,7 @@ class App extends React.Component{
 
   // updates parameter model
   updateParameter = function(parameter, value){
-    console.log('up: ', parameter, value);
+    // console.log('up: ', parameter, value);
 
     this.setState((previousState)=>{
       previousState.model[parameter] = value;

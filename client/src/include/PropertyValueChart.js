@@ -18,15 +18,17 @@ class PropertyValueChart extends React.Component {
 
   createChart() {
     const node = this.node;
+    // var width = document.getElementsByClassName('chartc')[0].offsetWidth;
+    // console.log('parentWidth = ', width);
 
     // remove stale chart
     d3.select(node)
       .selectAll('g')
       .remove();
 
-    var width = this.props.width,
+    var width = document.getElementsByClassName('chartc')[0].offsetWidth,
         height = this.props.height,
-        margin = {top: 20, right: 20, bottom: 30, left: 100},
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
         data = this.props.data;
 
         var xScale = d3.scaleLinear()
@@ -51,6 +53,20 @@ class PropertyValueChart extends React.Component {
           .append('g')
           .call(yAxis)
           .attr('transform', `translate(${margin.left}, 0)`);
+
+        // x-axis label
+        d3.select(node)
+          .append('text')
+          .attr('transform', `translate(${width/2}, ${height})`)
+          .text('Time (years)');
+
+        const yAxisLabelTranslate = `translate(${margin.left-40}, ${height/2})` + ' rotate(-90)';
+
+        // y-axis label
+        d3.select(node)
+          .append('text')
+          .attr('transform', yAxisLabelTranslate)
+          .text('Value ($)');
 
         var propertyValue = d3.line()
                   .x(function(d){

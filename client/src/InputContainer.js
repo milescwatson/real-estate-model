@@ -27,16 +27,18 @@ class InputContainer extends React.Component{
     super(props);
 
     // NOTE: This may or may not be a deep copy, watch for issues
-    
+
     var workingModel = Object.assign({}, props.appModel);
 
-    workingModel.rentYRG *= 100
-    workingModel.appreciationYRG *= 100
-    workingModel.stockYRG *= 100
-    workingModel.vaccancyPct *= 100
-    workingModel.downPaymentPct *= 100
-    workingModel.interestRatePct *= 100
+    workingModel.rentYRG *= 100;
+    workingModel.appreciationYRG *= 100;
+    workingModel.stockYRG *= 100;
+    workingModel.vaccancyPct *= 100;
+    workingModel.downPaymentPct *= 100;
+    workingModel.interestRatePct *= 100;
     workingModel.propertyManagerPercentageOfGrossRent *= 100;
+    workingModel.incomeTaxRate *= 100;
+    workingModel.closingCostsPct *=100;
 
     workingModel.purchasePrice = props.purchasePrice
 
@@ -96,6 +98,7 @@ class InputContainer extends React.Component{
         Purchase Price:
         <br />
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.purchasePrice}
           onValueChange = {(value) => {
             this.updateValues(value, 'purchasePrice');
@@ -110,6 +113,7 @@ class InputContainer extends React.Component{
         <br />
         Rent Yearly Rate of Growth:
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.rentYRG}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'rentYRG')
@@ -127,6 +131,7 @@ class InputContainer extends React.Component{
       <br />
       Appreciation YRG
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.appreciationYRG}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'appreciationYRG')
@@ -141,6 +146,8 @@ class InputContainer extends React.Component{
       Stock YRG
       <br />
         <NumberFormat
+ 	 			 className={"bp3-input"}
+ 	 			 className={"bp3-input"}
           value = {this.state.model.stockYRG}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'stockYRG')
@@ -155,6 +162,7 @@ class InputContainer extends React.Component{
       Vaccancy %
       <br />
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.vaccancyPct}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'vaccancyPct');
@@ -168,6 +176,7 @@ class InputContainer extends React.Component{
       <br />
       Down Payment %
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.downPaymentPct}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'downPaymentPct');
@@ -182,6 +191,7 @@ class InputContainer extends React.Component{
       Interest Rate %
       <br />
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.state.model.interestRatePct}
           onBlur = {(event) => {
             this.updateValuesPercent(event, 'interestRatePct');
@@ -195,6 +205,7 @@ class InputContainer extends React.Component{
         <br />
         Loan Length Years
         <NumberFormat
+ 	 			 className={"bp3-input"}
           value = {this.props.loanLengthYears}
           onValueChange = {(value) => {
             this.updateValues(value, 'loanLengthYears');
@@ -216,6 +227,7 @@ class InputContainer extends React.Component{
 
       Value of Land
       <NumberFormat
+ 	 			 className={"bp3-input"}
         value = {this.props.valueOfLand}
         onBlur = {(event) => {
           const val = parseFloat(event.target.value.substr(1).replace(/,/g,''));
@@ -230,6 +242,7 @@ class InputContainer extends React.Component{
 
       Property Mangement %
       <NumberFormat
+ 	 			 className={"bp3-input"}
         value = {this.state.model.propertyManagerPercentageOfGrossRent}
         onBlur = {(event) => {
           this.updateValuesPercent(event, 'propertyManagerPercentageOfGrossRent');
@@ -240,12 +253,76 @@ class InputContainer extends React.Component{
         fixedDecimalScale = {true}
         decimalScale = {2}
       />
+      <br />
 
-      Income Tax Rate % <NumericInput selectAllOnFocus={true} allowNumericCharactersOnly={true} buttonPosition={'none'} />
-      Years Out Computation <NumericInput selectAllOnFocus={true} allowNumericCharactersOnly={true} buttonPosition={'none'} />
-      Closing Costs <NumericInput selectAllOnFocus={true} allowNumericCharactersOnly={true} buttonPosition={'none'} placeholder={'%'} />
-      Deppreciate Over <NumericInput selectAllOnFocus={true} allowNumericCharactersOnly={true} buttonPosition={'none'} placeholder={'years'} />
-      Maximum Tax Writeoff / Year <NumericInput selectAllOnFocus={true} allowNumericCharactersOnly={true} buttonPosition={'none'} />
+      Income Tax Rate %
+      <NumberFormat
+ 	 			 className={"bp3-input"}
+        value = {this.state.model.incomeTaxRate}
+        onBlur = {(event) => {
+          this.updateValuesPercent(event, 'incomeTaxRate');
+        }}
+        thousandSeparator={true}
+        suffix={'%'}
+        defaultValue = {0}
+        fixedDecimalScale = {true}
+        decimalScale = {2}
+      />
+      <br />
+
+      Years Out Computation
+      <NumberFormat
+ 	 			 className={"bp3-input"}
+        value = {this.props.yearsOutComputation}
+        onBlur = {(event) => {
+          var val = event.target.value;
+          const regex = /years/gi;
+          val = val.replace(regex,'');
+          this.updateValues(val, 'yearsOutComputation', true);
+        }}
+        thousandSeparator={true}
+        suffix={' years'}
+        defaultValue = {0}
+        fixedDecimalScale = {true}
+        decimalScale = {0}
+      />
+      <br />
+
+      Deppreciate Over
+      <NumberFormat
+ 	 			 className={"bp3-input"}
+        value = {this.props.depreciateOver}
+        onBlur = {(event) => {
+          var val = event.target.value;
+          const regex = /years/gi;
+          val = val.replace(regex,'');
+          this.updateValues(val, 'depreciateOver', true);
+        }}
+        thousandSeparator={true}
+        suffix={' years'}
+        defaultValue = {0}
+        fixedDecimalScale = {true}
+        decimalScale = {0}
+      />
+      <br />
+
+      Maximum Tax Writeoff / Year
+      <NumberFormat
+ 	 			 className={"bp3-input"}
+        value = {this.props.maxWriteoffPerYear}
+        onBlur = {(event) => {
+          const val = parseFloat(event.target.value.substr(1).replace(/,/g,''));
+          this.updateValues(val, 'maxWriteoffPerYear', true);
+        }}
+        name = {'maxWriteoffPerYear'}
+        thousandSeparator={true}
+        prefix={'$'}
+        defaultValue = {0}
+        fixedDecimalScale = {true}
+        decimalScale = {0}
+      />
+
+      <br />
       </React.Fragment>
     )
   }.bind(this);

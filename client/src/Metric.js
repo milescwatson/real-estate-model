@@ -29,12 +29,13 @@ class Metric extends React.Component{
     }else if(this.props.prefix === '$'){
       return(
         <NumberFormat
-          value={value}
+          value={this.bigNumberString(value)[0]}
           prefix={'$'}
+          suffix={this.bigNumberString(value)[1]}
           thousandSeparator={true}
           defaultValue = {0}
           fixedDecimalScale = {true}
-          decimalScale = {2}
+          decimalScale = {1}
           displayType={'text'}
         />
       );
@@ -89,6 +90,39 @@ class Metric extends React.Component{
     return (this.props.colorProgression[colorIndex]);
 
   };
+
+  bigNumberString = function(number, maxNumberToDisplay){
+    var sign = 0;
+
+    if(number < 0){
+      sign = -1;
+    }else{
+      sign = 1;
+    }
+    number = Math.abs(number);
+    if (number < 1000){
+      return [number * sign, '']
+    } else if (number >= 1000 && number < 1e6){
+      var thousands = number / 1000;
+      thousands = thousands.toFixed(1);
+      return [thousands*sign, 'K']
+
+    } else if (number >= 1e6 && number < 1e9){
+      var millions = number / 1e6;
+      millions = millions.toFixed(2);
+      return [millions*sign, 'M']
+    } else if (number >= 1e9 && number <=1e12){
+      //billion and trillion
+      var billions = number / 1e9;
+      billions = billions.toFixed(2);
+
+      return [billions*sign, 'B']
+    } else {
+      return ['...', '?']
+    }
+
+  };
+
 
   render(){
     var textStyle = {
