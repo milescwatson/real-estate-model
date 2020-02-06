@@ -164,11 +164,39 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
         }
         callback(null);
       },
-      generateTaxFlowIRSArray = function(callback){
+      generateCashflowIRSArray = function(callback){
+        //annual
+        for (var year = 0; year <= model.yearsOutComputation; year++) {
+          computedArrays.cashFlowIRS[year] = ((computedArrays.netOperatingIncome[year] * 12) + computedArrays.annualInterest[year] - computedArrays.depreciation[year]);
+        }
+        computedArrays.cashFlowIRS[0] = 0;
+        callback(null);
+      },
+      generateWriteoffArray = function(callback){
+        for (var year = 0; year <= model.yearsOutComputation; year++) {
+          var writeOffThisYear = 0;
+          if(computedArrays.cashFlowIRS[year] < 0){
+            if(computedArrays.cashFlowIRS[year] > model.maxWriteoffPerYear){
+              writeOffThisYear = model.maxWriteoffPerYear;
+            }else{
+              writeOffThisYear = computedArrays.cashFlowIRS[year];
+            }
+          }
+          computedArrays.resultingTaxWriteoff[year] = writeOffThisYear;
+        }
+        callback(null);
+      },
+      generateValueOfRealEstateInvestmentIncludingWriteoffs = function(callback){
+        var cumulativeWriteoffs = 0;
+        for (var year = 0; year <= model.yearsOutComputation; year++) {
 
+          cumulativeWriteoffs += computedArrays.resultingTaxWriteoff[year];
+          computedArrays.valueOfRealEstateInvestmentIncludingWriteoffs[year] = computedArrays.valueOfRealEstateInvestment[year] + cumulativeWriteoffs;
+        }
+        callback(null);
       };
 
-      waterfall([generateGRIArray, generateAndMergeExpenseArray, generateNOIArray, generateAmortizationArrays, generateCashflowArray, generateAppreciatedValueArray, generateEquityArray, generateComparableInvestmentValueArray, generateDepreciationArray, generateValueOfREInvestment], (result)=> {
+      waterfall([generateGRIArray, generateAndMergeExpenseArray, generateNOIArray, generateAmortizationArrays, generateCashflowArray, generateAppreciatedValueArray, generateEquityArray, generateComparableInvestmentValueArray, generateDepreciationArray, generateValueOfREInvestment, generateCashflowIRSArray, generateWriteoffArray, generateValueOfRealEstateInvestmentIncludingWriteoffs], (result)=> {
         callback(null, computedArrays);
       })
 }

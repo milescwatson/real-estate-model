@@ -18,12 +18,6 @@
   border: 1px dotted blue;
 }
 
-.container-fluid {
-  margin: 3%;
-  overflow:visible ;
-  border: 10px solid green;
-}
-
 @import "~normalize.css";
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";

@@ -1,6 +1,5 @@
-import React, {useState} from 'react';
-import { Button, Icon, Intent } from "@blueprintjs/core";
-// import { IconNames } from "@blueprintjs/icons";
+import React from 'react';
+import { Button, Icon } from "@blueprintjs/core";
 import './include/css/bootstrap.min.css';
 import './include/css/app.css';
 import './include/css/universal.css';
@@ -11,14 +10,15 @@ import ChartContainer from './ChartContainer';
 import Metric from './Metric.js';
 import NumberFormat from 'react-number-format';
 import InputContainer from './InputContainer';
-
-import _ from 'lodash';
+import SyncComponent from './SyncComponent';
+var isIconSize = 22;
 
 class App extends React.Component{
   constructor(props){
     super(props);
     this.initialState = {
       model : {
+        name: 'untitled model',
         rentYRG: 0.02,
         appreciationYRG: 0.015,
         units: {
@@ -222,42 +222,48 @@ class App extends React.Component{
     }.bind(this);
 
     var handleEditNumber = function(value, id){
-      this.setState((previousState) => {
-        previousState.model.units[id].rentPerMonth = value.floatValue;
-        return({
-          model: previousState.model
-        });
-      }, this.computeEverything());
+      if(!isNaN(value.floatValue)){
+        this.setState((previousState) => {
+          previousState.model.units[id].rentPerMonth = value.floatValue;
+          return({
+            model: previousState.model
+          });
+        }, this.computeEverything());
+      }
+
     }.bind(this);
 
+    // only handles names
     var handleEditRow = function(event, dataType){
       var input = event.target.name.split('_'),
           name = input[0],
           id = input[1],
-          workingModel = this.state.model;
+          workingModel = this.state.model,
+          isTitle = false;
 
       if(dataType === 'units'){
         switch (name) {
           case 'unitName':
             workingModel.units[id].name = event.target.value;
             break;
-          case 'unitRentPerMonth':
-            var rentValue = event.target.value
-            if(rentValue[0] === '$'){
-              rentValue = rentValue.substr(1);
-            }
-            workingModel.units[id].rentPerMonth = parseFloat(rentValue);
-            break;
-          case 'unitRentPerYear':
-            break;
           default:
             break;
+        }
+      } else if (dataType === 'expense'){
+        if(name === 'expenseName'){
+          workingModel.expenses[id].name = event.target.value;
+          isTitle = true;
         }
       }
 
       this.setState({
         model: workingModel
-      }, this.computeEverything())
+      }, () => {
+        if(!isTitle){
+          this.computeEverything();
+        }
+      });
+
     }.bind(this);
 
     var handleEditYRG = function(value,id){
@@ -274,8 +280,8 @@ class App extends React.Component{
           Object.keys(this.state.model.units).forEach((id) => {
                 if(typeof(this.state.model.units[id].name) !== 'undefined'){
                   unitRowsVisual.push(
-                    <tr key={index}>
-                      <td><input type="text" value={this.state.model.units[id].name} onChange={(event) => {handleEditRow(event, 'units')}} name={'unitName_'+id} /></td>
+                    <tr className={'income-statement-item-row'} key={index}>
+                      <td><input className={"bp3-input"} type="text" value={this.state.model.units[id].name} onChange={(event) => {handleEditRow(event, 'units')}} name={'unitName_'+id} /></td>
 
                       <td>
                           <NumberFormat
@@ -306,8 +312,11 @@ class App extends React.Component{
 
                       </td>
 
+                      <td>
+                      </td>
+
                       <td name={'thisIStheID'} onClick={() => {handleDeleteRow('units', id)}}>
-                        <Icon icon={'remove'} intent="danger" />
+                        <Icon className={"hyper-tooltip"} icon={'remove'} intent="danger" iconSize={isIconSize} />
                       </td>
                     </tr>
                   )
@@ -327,28 +336,29 @@ class App extends React.Component{
             value = value.substr(1);
           }
           value = parseFloat(value);
-
-      switch (name) {
-        case 'unitExpensePerMonth':
-          this.setState((workingState)=>{
-            workingState.model.expenses[id].amount = parseFloat(value);
-            workingState.model.expenses[id].amountYearly = parseFloat(value * 12);
-            return({
-              model: workingState.model
-            });
-          }, this.computeEverything());
-          break;
-        case 'unitExpensePerYear':
-          this.setState((workingState)=>{
-            workingState.model.expenses[id].amountYearly = parseFloat(value);
-            workingState.model.expenses[id].amount = parseFloat(value / 12);
-            return({
-              model: workingState.model
-            });
-          }, this.computeEverything());
-          break;
-        default:
-          break;
+      if(!isNaN(value)){
+        switch (name) {
+          case 'unitExpensePerMonth':
+            this.setState((workingState)=>{
+              workingState.model.expenses[id].amount = parseFloat(value);
+              workingState.model.expenses[id].amountYearly = parseFloat(value * 12);
+              return({
+                model: workingState.model
+              });
+            }, this.computeEverything());
+            break;
+          case 'unitExpensePerYear':
+            this.setState((workingState)=>{
+              workingState.model.expenses[id].amountYearly = parseFloat(value);
+              workingState.model.expenses[id].amount = parseFloat(value / 12);
+              return({
+                model: workingState.model
+              });
+            }, this.computeEverything());
+            break;
+          default:
+            break;
+        }
       }
     }.bind(this);
 
@@ -358,8 +368,8 @@ class App extends React.Component{
       Object.keys(this.state.model.expenses).forEach((id) => {
         if(typeof(this.state.model.expenses[id] !== 'undefined')){
           expenseRowsVisual.push(
-            <tr key={index}>
-              <td><input type="text" value={this.state.model.expenses[id].name} onChange={(event) => {handleEditRow(event, 'expense')}} name={'expenseName_'+id} /></td>
+            <tr className={'income-statement-item-row'} key={index}>
+              <td><input className={'bp3-input'} type="text" value={this.state.model.expenses[id].name} onChange={(event) => {handleEditRow(event, 'expense')}} name={'expenseName_'+id} /></td>
             <td>
                 <NumberFormat
                   className = {'bp3-input'}
@@ -409,7 +419,7 @@ class App extends React.Component{
             <td onClick={()=> {
                 handleDeleteRow('expense', id);
               }}>
-              <Icon icon={'remove'} intent="danger" />
+              <Icon className={"hyper-tooltip"} icon={'remove'} intent="danger" iconSize={isIconSize} />
             </td>
 
             </tr>
@@ -430,25 +440,37 @@ class App extends React.Component{
       }
     }.bind(this);
 
-    var sumRents = function(){
-      var sumRents = 0;
-      _.each(this.state.model.units, (unit, key)=>{
-        sumRents += unit.rentPerMonth
-      });
-      return sumRents;
+    var cashflowRowStyle = {};
+    var generateCashflowStyle = function(){
+      if (this.state.computedArrays.cashFlow[0] < 0){
+        // negative
+        cashflowRowStyle = {
+          'backgroundColor': '#f8d7da',
+          'fontWeight': 'bold'
+        }
+      }else{
+        // positive
+        cashflowRowStyle = {
+          'backgroundColor': '#D4EDDB',
+          'fontWeight': 'bold'
+        }
+      }
     }.bind(this);
+    generateCashflowStyle();
 
     return(
       <React.Fragment>
         <h3>Income Statement</h3>
-        <table className="table table-hover table-sm">
+
+        <table className="is-table">
           <tbody>
-          <tr>
-            <td><h5>Units</h5></td>
-            <td>Monthly</td>
-            <td>Annual</td>
-            <td onClick={handleAddUnit}>
-              <Button text="Add Unit" intent="primary" rightIcon="plus" />
+          <tr className="income-statement-header">
+            <td className="td-noborder"> <h5>Units</h5></td>
+            <td className="income-statement-title td-noborder">Monthly</td>
+            <td className="income-statement-title td-noborder">Annual</td>
+            <td className="td-noborder"></td>
+            <td className="td-noborder" onClick={handleAddUnit}>
+              <Icon className={"hyper-tooltip"} icon={'add'} intent="success" iconSize={isIconSize} />
             </td>
           </tr>
           {unitRowsVisual}
@@ -541,13 +563,14 @@ class App extends React.Component{
               />
             </td>
           </tr>
-          <tr>
+
+          <tr className="income-statement-exp-header">
             <td><h5>Expenses</h5></td>
             <td></td>
             <td></td>
-            <td>Rate of Growth</td>
+            <td className="income-statement-title">Rate of Growth</td>
             <td onClick={handleAddExpense}>
-                <Button text="Add Expense" intent="primary" rightIcon="plus" />
+                <Icon className={"hyper-tooltip"} icon={'add'} intent="success" iconSize={isIconSize} />
             </td>
           </tr>
           {expenseRowsVisual}
@@ -673,7 +696,7 @@ class App extends React.Component{
 
           </tr>
 
-          <tr>
+          <tr style={cashflowRowStyle}>
             <td>Cashflow</td>
             <td>
               <NumberFormat
@@ -705,6 +728,26 @@ class App extends React.Component{
         </table>
       </React.Fragment>
     );
+  }.bind(this);
+
+  MetadataComponent = function(){
+    return(
+      <React.Fragment>
+        <h1>metadata component</h1>
+        <input type="text" value={this.state.model.name} onChange={(event) => {
+            const value = event.target.value;
+
+            this.setState((previousState) => {
+              previousState.model.name = value;
+              return({
+                model: previousState.model
+              })
+            });
+
+          }} />
+      </React.Fragment>
+
+    )
   }.bind(this);
 
   // update inputContainer values callback
@@ -740,8 +783,6 @@ class App extends React.Component{
 
   // updates parameter model
   updateParameter = function(parameter, value){
-    // console.log('up: ', parameter, value);
-
     this.setState((previousState)=>{
       previousState.model[parameter] = value;
       return({
@@ -754,7 +795,49 @@ class App extends React.Component{
   render(){
     return(
       <React.Fragment>
-        <div className="container">
+        <header>
+          <h3>Real Estate Model</h3>
+        </header>
+
+        <section>
+          <div class="sidebar">
+            <h3>real estate model sidebar</h3>
+          </div>
+
+          <div class="app">
+            <this.MetadataComponent />
+              <br />
+
+              <InputContainer
+                className = "input-container"
+                purchasePrice = {this.state.computedArrays.propertyValue[0]}
+                appModel = {this.state.model}
+                loanLengthYears = {this.state.model.loanLengthYears}
+                valueOfLand = {this.state.model.valueOfLand}
+                yearsOutComputation = {this.state.model.yearsOutComputation}
+                depreciateOver = {this.state.model.depreciateOver}
+                maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
+
+                updateParametersCallback = {this.updateParametersCallback}
+                updateParameterCallback = {this.updateParameter}
+              />
+              <ChartContainer
+                className = "chart-container"
+                data={this.state.computedArrays.propertyValue}
+                valueOfStockMarketInvestment = {this.state.computedArrays.valueOfStockMarketInvestment}
+              />
+
+
+          </div>
+
+        </section>
+
+
+        <div className="container-fluid">
+
+          <div className="row">
+
+          </div>
 
           <div className="row">
               <h1>Rental Property Investment Analysis</h1>
@@ -848,7 +931,6 @@ class App extends React.Component{
               />
             </div>
           </div>
-
         </div>
 
           <UserView
@@ -856,7 +938,6 @@ class App extends React.Component{
             userViews = {this.state.userViews}
           />
           <br />
-
         <button className='btn btn-outline-primary' onClick = {this.computeEverything} >Compute Everything</button>
 
       </React.Fragment>

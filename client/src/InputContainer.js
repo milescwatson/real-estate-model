@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React from 'react';
 import './include/css/InputContainer.css';
 import './include/css/universal.css';
-import { Tab, Tabs, NumericInput } from "@blueprintjs/core";
+import { Tab, Tabs } from "@blueprintjs/core";
 import NumberFormat from 'react-number-format';
-import _ from 'lodash';
+// import _ from 'lodash';
 
 // rentYRG
 // appreciationYRG
@@ -71,7 +71,7 @@ class InputContainer extends React.Component{
       });
       this.props.updateParametersCallback(floatValue, parameter);
     }
-  }.bind(this);
+  }
 
   // converts the selected value being changed to a decimal percentage format
   updateValuesPercent = function(event, parameter){
@@ -146,7 +146,6 @@ class InputContainer extends React.Component{
       Stock YRG
       <br />
         <NumberFormat
- 	 			 className={"bp3-input"}
  	 			 className={"bp3-input"}
           value = {this.state.model.stockYRG}
           onBlur = {(event) => {

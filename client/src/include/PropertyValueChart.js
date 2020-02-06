@@ -16,6 +16,38 @@ class PropertyValueChart extends React.Component {
     this.createChart();
   }
 
+  bigNumberString = function(number, maxNumberToDisplay){
+    var sign = 0;
+
+    if(number < 0){
+      sign = -1;
+    }else{
+      sign = 1;
+    }
+    number = Math.abs(number);
+    if (number < 1000){
+      return [number * sign, '']
+    } else if (number >= 1000 && number < 1e6){
+      var thousands = number / 1000;
+      thousands = thousands.toFixed(1);
+      return [thousands*sign, 'K']
+
+    } else if (number >= 1e6 && number < 1e9){
+      var millions = number / 1e6;
+      millions = millions.toFixed(2);
+      return [millions*sign, 'M']
+    } else if (number >= 1e9 && number <=1e12){
+      //billion and trillion
+      var billions = number / 1e9;
+      billions = billions.toFixed(2);
+
+      return [billions*sign, 'B']
+    } else {
+      return ['...', '?']
+    }
+
+  };
+
   createChart() {
     const node = this.node;
     // var width = document.getElementsByClassName('chartc')[0].offsetWidth;
@@ -35,6 +67,10 @@ class PropertyValueChart extends React.Component {
                     .domain([0, data.length])
                     .range([margin.left, width-margin.right]);
 
+        var formatYAxisLabels = function(input){
+          return(input)
+        };
+
         var yScale = d3.scaleLinear()
                      .domain([0, (data[data.length-1] + (data[data.length-1]*.10) ) ])
                      .range([height-margin.bottom, margin.top]);
@@ -42,7 +78,11 @@ class PropertyValueChart extends React.Component {
         var xAxis = d3.axisBottom(xScale)
                       .tickSizeOuter(0);
 
-        var yAxis = d3.axisLeft(yScale);
+        var yAxis = d3.axisLeft(yScale)
+                      .tickFormat((input) => {
+                        var output = this.bigNumberString(input);
+                        return('$' + output[0] + output[1]);
+                      });
 
         d3.select(node)
           .append('g')
@@ -71,29 +111,19 @@ class PropertyValueChart extends React.Component {
         var propertyValue = d3.line()
                   .x(function(d){
                     var index = arguments[1];
-                    // console.log('x = ', index);
-                    // return index;
                     return(xScale(index));
                   })
                   .y(function(d){
                     return(yScale(d));
-                    // var index = arguments[1];
-                    // console.log('y = ', d);
-                    // return d;
                   });
 
         var marketValueLine = d3.line()
           .x(function(d){
             var index = arguments[1];
-            // console.log('x = ', index);
-            // return index;
             return(xScale(index));
           })
           .y(function(d){
             return(yScale(d));
-            // var index = arguments[1];
-            // console.log('y = ', d);
-            // return d;
         });
 
         d3.select(node)

@@ -77,7 +77,6 @@ class ChartContainer extends React.Component{
     })
   }.bind(this);
 
-  // put this in pv chart
   getWidth = function(){
     var width = document.getElementsByClassName('chartc')[0].offsetWidth;
     return(width);
@@ -92,6 +91,7 @@ class ChartContainer extends React.Component{
                 <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />
               </Tabs>
             </div>
+
       </React.Fragment>
     )
   }

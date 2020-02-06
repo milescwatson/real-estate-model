@@ -3,15 +3,88 @@
   margin: 10px;
 }
 
-table, tr, td, th {
-  border: 1px solid gray;
+.income-statement-title {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.income-statement-header {
+  border-style: hidden;
+}
+.income-statement-exp-header {
+  border-left-style: hidden;
+  border-right-style: hidden;
+  border-bottom-style: hidden;
 }
 
-.monthly-revenue-td:hover {
-  color:green;
+.td-noborder {
+  border-left-style: hidden !important;
+  border-right-style: hidden !important;
 }
+
+.income-statement-table {
+  padding: .3rem
+}
+
+.is-table {
+  margin: 20px;
+}
+
+.is-table td, .is-table th {
+  padding: .32rem;
+}
+
+/* .income-statement-item-row {
+  border-top: 1px solid gray;
+  border-left-style: hidden;
+  border-right-style: hidden;
+} */
+
+
+.income-statement-item-row:hover {
+  background-color: rgba(0,0,0,.075);
+}
+
+/* .income-statement-item-row {
+  border-bottom: 1px solid #8080804a !important;
+  border-top: 1px solid #8080804a !important;
+}
+
+.income-statement-item-row:hover {
+  border-top: 1px solid gray !important;
+  border-bottom: 1px solid gray !important;
+} */
 
 .inputs {
   width: 20%;
   display: block;
+}
+
+.hyper-tooltip {
+  cursor:pointer;
+}
+
+header {
+  height: 100px;
+  background-color: aqua;
+}
+
+section {
+  display: flex;
+  border: 1px dotted gray;
+}
+
+.app {
+  flex: 9;
+  display: flex;
+}
+
+.input-container {
+  flex: 1
+}
+
+
+.sidebar {
+  flex: 3;
+  margin-left: 0px;
+  border: 1px solid gray;
 }

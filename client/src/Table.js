@@ -69,20 +69,19 @@ class Table extends React.Component {
 
   CombinedTable = function(props){
     return(
-      <>
-      <br />
-      <table className="table table-hover table-sm table-responsive">
-        <thead>
-        <this.TableHead />
-        </thead>
-        <tbody>
-          <this.TableBody />
-        </tbody>
-      </table>
-      </>
+      <React.Fragment>
+        <br />
+        <table className="table table-hover table-sm table-responsive">
+          <thead>
+          <this.TableHead />
+          </thead>
+          <tbody>
+            <this.TableBody />
+          </tbody>
+        </table>
+      </React.Fragment>
     )
-
-  }.bind(this)
+  }.bind(this);
 
   SimpleTable = function(props){
     return(
