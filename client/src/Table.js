@@ -10,7 +10,7 @@ class Table extends React.Component {
     super(props);
     this.initialState = {
       computedArrays: props.computedArrays,
-      selectedView: 'advanced-table'
+      selectedView: 'simple-table'
     };
     this.state = this.initialState;
   }
@@ -89,11 +89,18 @@ class Table extends React.Component {
     )
   }
 
+  handleTabChange = function(selected){
+    this.setState({
+      selectedState: selected
+    });
+  }.bind(this);
+
   render(){
     return(
       <React.Fragment>
+
         <div className = "table-container">
-          <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
+          <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.selectedView}>
             <Tab id="advanced-table" title="Advanced Table" panel={<this.CombinedTable />} />
             <Tab id="simple-table" title="Simple Table" panel={<this.SimpleTable />} />
           </Tabs>

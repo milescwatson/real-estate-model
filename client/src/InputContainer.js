@@ -307,7 +307,7 @@ class InputContainer extends React.Component{
 
       Maximum Tax Writeoff / Year
       <NumberFormat
- 	 			 className={"bp3-input"}
+ 	 			className={"bp3-input"}
         value = {this.props.maxWriteoffPerYear}
         onBlur = {(event) => {
           const val = parseFloat(event.target.value.substr(1).replace(/,/g,''));
@@ -329,10 +329,12 @@ class InputContainer extends React.Component{
   render(){
     return(
       <React.Fragment>
-            <Tabs animate="true" large={true} id="inputTabs" onChange={this.handleTabChange} selectedTabId={this.state.selectedView}>
-              <Tab id="main" title="Main" panel={<this.MainInputs />} />
-              <Tab id="advanced" title="Advanced" panel={<this.AdvancedInputs />} />
-            </Tabs>
+            <div className={this.props.className}>
+              <Tabs animate="true" large={true} id="inputTabs" onChange={this.handleTabChange} selectedTabId={this.state.selectedView}>
+                <Tab id="main" title="Main" panel={<this.MainInputs />} />
+                <Tab id="advanced" title="Advanced" panel={<this.AdvancedInputs />} />
+              </Tabs>
+            </div>
 
       </React.Fragment>
     );

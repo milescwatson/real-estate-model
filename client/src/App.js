@@ -460,8 +460,8 @@ class App extends React.Component{
 
     return(
       <React.Fragment>
+        <div className="is-container container-padding">
         <h3>Income Statement</h3>
-
         <table className="is-table">
           <tbody>
           <tr className="income-statement-header">
@@ -726,6 +726,9 @@ class App extends React.Component{
 
         </tbody>
         </table>
+        <h3>Financial Projections</h3>
+      </div>
+
       </React.Fragment>
     );
   }.bind(this);
@@ -800,16 +803,15 @@ class App extends React.Component{
         </header>
 
         <section>
-          <div class="sidebar">
-            <h3>real estate model sidebar</h3>
+          <div className="sidebar container-padding">
+            <h4>My Models</h4>
           </div>
 
-          <div class="app">
-            <this.MetadataComponent />
+          <div className="app">
               <br />
 
               <InputContainer
-                className = "input-container"
+                className = "input-container container-padding"
                 purchasePrice = {this.state.computedArrays.propertyValue[0]}
                 appModel = {this.state.model}
                 loanLengthYears = {this.state.model.loanLengthYears}
@@ -821,124 +823,77 @@ class App extends React.Component{
                 updateParametersCallback = {this.updateParametersCallback}
                 updateParameterCallback = {this.updateParameter}
               />
+
               <ChartContainer
                 className = "chart-container"
-                data={this.state.computedArrays.propertyValue}
-                valueOfStockMarketInvestment = {this.state.computedArrays.valueOfStockMarketInvestment}
+                data={{
+                  'propertyValue': this.state.computedArrays.propertyValue,
+                  'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
+                }}
+
               />
 
-
-          </div>
-
-        </section>
-
-
-        <div className="container-fluid">
-
-          <div className="row">
-
-          </div>
-
-          <div className="row">
-              <h1>Rental Property Investment Analysis</h1>
-          </div>
-
-          <div className="row">
-            <div className="col-3">
-
-              <InputContainer
-                purchasePrice = {this.state.computedArrays.propertyValue[0]}
-                appModel = {this.state.model}
-                loanLengthYears = {this.state.model.loanLengthYears}
-                valueOfLand = {this.state.model.valueOfLand}
-                yearsOutComputation = {this.state.model.yearsOutComputation}
-                depreciateOver = {this.state.model.depreciateOver}
-                maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
-
-                updateParametersCallback = {this.updateParametersCallback}
-                updateParameterCallback = {this.updateParameter}
-              />
-
-            </div>
-              <ChartContainer
-                data={this.state.computedArrays.propertyValue}
-                valueOfStockMarketInvestment = {this.state.computedArrays.valueOfStockMarketInvestment}
-              />
-          </div>
-
-          <div className="row">
-            <div className="info-container any-container col-12">
-              <h3>Key Metrics</h3>
-
-              <Metric
-                value={(this.state.computedArrays.netOperatingIncome[1]*12) / this.state.computedArrays.propertyValue[1]}
-                label={'Cap Rate'}
-                hint={'NOI / Purchase Price'}
-                range={[0,10]}
-                colorProgression={['#721c24','#856404','#155724']}
-                highPositive={true}
-                prefix={''}
-                postfix={'%'}
-              />
-
-              <Metric
-                value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
-                label={'Gross Rent Multiplier'}
-                hint={'PP / GRI'}
-                range={[0,10]}
-                colorProgression={['#721c24','#856404','#155724']}
-                highPositive={true}
-                prefix={''}
-              />
-
-              <Metric
-                value={(this.state.computedArrays.cashFlow[0] * 12) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
-                label={'Cash-On-Cash Return'}
-                hint={'pre-tax cash flow / cash invested (down payment)'}
-                range={[0,10]}
-                colorProgression={['#721c24','#856404','#155724']}
-                highPositive={true}
-                prefix={''}
-                postfix={'%'}
-              />
-
-              <Metric
-                value={this.state.computedArrays.cashFlow[0]}
-                label={'First Year Cashflow'}
-                hint={'pre-tax cash flow / cash invested (down payment)'}
-                range={[0,0]}
-                colorProgression={['#721c24','#856404','#155724']}
-                highPositive={true}
-                prefix={'$'}
-              />
-
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="input-container any-container col-12">
               <this.IncomeStatement />
-            </div>
-          </div>
 
-          <div className="row">
-            <div className="col-12">
+              <div className="metrics-container container-padding">
+                <h3>Key Metrics</h3>
+
+                <Metric
+                  value={(this.state.computedArrays.netOperatingIncome[1]*12) / this.state.computedArrays.propertyValue[1]}
+                  label={'Cap Rate'}
+                  hint={'NOI / Purchase Price'}
+                  range={[0,10]}
+                  colorProgression={['#721c24','#856404','#155724']}
+                  highPositive={true}
+                  prefix={''}
+                  postfix={'%'}
+                />
+
+                <Metric
+                  value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
+                  label={'Gross Rent Multiplier'}
+                  hint={'PP / GRI'}
+                  range={[0,10]}
+                  colorProgression={['#721c24','#856404','#155724']}
+                  highPositive={true}
+                  prefix={''}
+                />
+
+                <Metric
+                  value={(this.state.computedArrays.cashFlow[0] * 12) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                  label={'Cash-On-Cash Return'}
+                  hint={'pre-tax cash flow / cash invested (down payment)'}
+                  range={[0,10]}
+                  colorProgression={['#721c24','#856404','#155724']}
+                  highPositive={true}
+                  prefix={''}
+                  postfix={'%'}
+                />
+
+                <Metric
+                  value={this.state.computedArrays.cashFlow[0]}
+                  label={'First Year Cashflow'}
+                  hint={'pre-tax cash flow / cash invested (down payment)'}
+                  range={[0,0]}
+                  colorProgression={['#721c24','#856404','#155724']}
+                  highPositive={true}
+                  prefix={'$'}
+                />
+
+              </div>
+
+              <div className="table-container">
               <Table
                 yearsOutComputation={this.state.model.yearsOutComputation}
                 computedArrays = {this.state.computedArrays}
                 userViews = {this.state.userViews}
                 loanLengthYears = {this.state.model.loanLengthYears}
               />
-            </div>
-          </div>
-        </div>
+              </div>
 
-          <UserView
-            computedArrays = {this.state.computedArrays}
-            userViews = {this.state.userViews}
-          />
-          <br />
-        <button className='btn btn-outline-primary' onClick = {this.computeEverything} >Compute Everything</button>
+          </div>
+
+        </section>
 
       </React.Fragment>
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import './css/universal.css';
 import * as d3 from "d3";
+var _ = require('lodash');
 
 class PropertyValueChart extends React.Component {
   constructor(props){
@@ -61,18 +62,38 @@ class PropertyValueChart extends React.Component {
     var width = document.getElementsByClassName('chartc')[0].offsetWidth,
         height = this.props.height,
         margin = {top: 20, right: 20, bottom: 30, left: 50},
-        data = this.props.data;
+        data = this.props.data,
+        dataAsArray = [];
+
+        // put data into nested array
+        _.each(data, (value, key) => {
+          dataAsArray.push(value);
+        });
+
+        var dataLength = (data[Object.keys(data)[0]]).length;
+        // the xscale is going to be number years
+        // every array will have the same length, so will just use the first one
 
         var xScale = d3.scaleLinear()
-                    .domain([0, data.length])
+                    .domain([0, dataLength])
                     .range([margin.left, width-margin.right]);
 
-        var formatYAxisLabels = function(input){
-          return(input)
-        };
+                    //todo: delete this
+        // var formatYAxisLabels = function(input){
+        //   return(input)
+        // };
+
+        // the yScale will be the highest $ value in any array
+        var maximumDollarValue = 0;
+        _.each(data, (arrayIterator, key) => {
+          if(Math.max(...arrayIterator) > maximumDollarValue){
+            // console.log('result = ', Math.max(...arrayIterator));
+            maximumDollarValue = Math.max(...arrayIterator);
+          }
+        })
 
         var yScale = d3.scaleLinear()
-                     .domain([0, (data[data.length-1] + (data[data.length-1]*.10) ) ])
+                     .domain([0, (maximumDollarValue + (maximumDollarValue*.10) ) ])
                      .range([height-margin.bottom, margin.top]);
 
         var xAxis = d3.axisBottom(xScale)
@@ -108,44 +129,132 @@ class PropertyValueChart extends React.Component {
           .attr('transform', yAxisLabelTranslate)
           .text('Value ($)');
 
-        var propertyValue = d3.line()
-                  .x(function(d){
-                    var index = arguments[1];
-                    return(xScale(index));
-                  })
-                  .y(function(d){
-                    return(yScale(d));
-                  });
+        // var propertyValueLine = d3.line()
+        //           .x(function(d){
+        //             var index = arguments[1];
+        //             return(xScale(index));
+        //           })
+        //           .y(function(d){
+        //             return(yScale(d));
+        //           });
+        //
+        // var marketValueLine = d3.line()
+        //   .x(function(d){
+        //     var index = arguments[1];
+        //     return(xScale(index));
+        //   })
+        //   .y(function(d){
+        //     return(yScale(d));
+        // });
 
-        var marketValueLine = d3.line()
-          .x(function(d){
-            var index = arguments[1];
-            return(xScale(index));
-          })
-          .y(function(d){
-            return(yScale(d));
+        var d3Line = d3.line()
+            .x(function(d){
+              var index = arguments[1];
+              return(xScale(index));
+            })
+            .y(function(d){
+              return(yScale(d));
+            });
+
+
+        // var paths = d3.select(node)
+        //   .selectAll('circle')
+        //   .data(dataAsArray)
+        //   .enter()
+        //   .append('circle')
+        //   .attr('r', '5.5')
+        //   .attr('class', ()=> {
+        //     console.log('classArgs = ', arguments);
+        //     return('hello');
+        //   });
+
+        var colorMapping = {
+          'stockMarketValue': 'red',
+          'propertyValue': 'steelblue'
+        };
+
+        var nameMapping = {
+          'stockMarketValue': 'Stock Market Value',
+          'propertyValue': 'Property Value'
+            },
+            mapName = function(key){
+              if(Object.keys(nameMapping).includes(key)){
+                return(nameMapping[key]);
+              }else{
+                return(key);
+              }
+            };
+
+        _.each(this.props.data, (value, key) => {
+          d3.select(node)
+            .append('path')
+            .datum(value)
+            .attr("fill", "none")
+            .attr("stroke", colorMapping[key])
+            .attr("stroke-width", 1.5)
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-linecap", "round")
+            .attr("d", d3Line);
         });
 
-        d3.select(node)
-          .append('path')
-          .datum(this.props.valueOfStockMarketInvestment)
-          .attr("fill", "none")
-          .attr("stroke", "red")
-          .attr("stroke-width", 1.5)
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-linecap", "round")
-          .attr("d", marketValueLine);
+      // add legend for each dataset
+      var legend = d3.select(node)
+        .selectAll('.legend')
+        .data(Object.keys(data))
+        .enter()
+        .append('g')
+        .attr('class', 'legend-item');
 
+      legend.append('rect')
+            .attr('x', function(key,index){
+              return(((index+1) * 150)+60);
+            })
+            .attr('y', (key,index,selection) => {
+              return(10)
+            })
+            .attr('width', 24)
+            .attr('height', 10)
+            .style("fill", (key) => {
+              return colorMapping[key];
+            });
 
-        d3.select(node)
-              .append('path')
-              .datum(data)
-              .attr("fill", "none")
-              .attr("stroke", "steelblue")
-              .attr("stroke-width", 1.5)
-              .attr("stroke-linejoin", "round")
-              .attr("stroke-linecap", "round")
-              .attr("d", propertyValue);
+      legend.append('text')
+            .text((key) => {
+              return(mapName(key));
+            })
+            .attr('x', (key, index) => {
+              return(((index+1) * 150)+90);
+            })
+            .attr('y', (key, index) => {
+              return(19)
+            });
+        //
+        // var legend = svg.selectAll('g')
+        //   .data(cities)
+        //   .enter()
+        //   .append('g')
+        //   .attr('class', 'legend');
+        //
+        //   legend.append('rect')
+        //     .attr('x', width - 20)
+        //     .attr('y', function(d, i) {
+        //       return i * 20;
+        //     })
+        //     .attr('width', 10)
+        //     .attr('height', 10)
+        //     .style('fill', function(d) {
+        //       return color(d.name);
+        //     });
+        //
+        //   legend.append('text')
+        //     .attr('x', width - 8)
+        //     .attr('y', function(d, i) {
+        //       return (i * 20) + 9;
+        //     })
+        //     .text(function(d) {
+        //       return d.name;
+        //     });
+
   }
 
   deleteChart() {

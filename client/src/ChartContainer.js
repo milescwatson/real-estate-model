@@ -14,48 +14,11 @@ class ChartContainer extends React.Component{
     this.state = this.initialState;
   }
 
-  // handleTabChange = function(event){
-  //   switch (event.target.name) {
-  //     case 'amortization':
-  //       this.setState({
-  //         currentView: 'amortization'
-  //       });
-  //       break;
-  //     case 'value':
-  //       this.setState({
-  //         currentView: 'value'
-  //       });
-  //       break;
-  //     default:
-  //       alert('error, case statement default.');
-  //   }
-  // }.bind(this);
-
-  // visual
-  // Tabs = function(){
-  //   var className = '';
-  //   if(this.state.currentView === 'value'){
-  //     className='tab-underlined-value'
-  //   }else{
-  //     className='tab-underlined-amortization'
-  //   }
-  //
-  //   return(
-  //     <React.Fragment>
-  //       <div className="header-tabs">
-  //         <button className= {(this.state.currentView === 'value') ? 'tab-item tab-underlined' : 'tab-item'} name="value" onClick={this.handleTabChange} > Value </button>
-  //         <button className= {(this.state.currentView === 'amortization') ? 'tab-item tab-underlined' : 'tab-item'} name="amortization" onClick={this.handleTabChange} > Amortization </button>
-  //       </div>
-  //     </React.Fragment>
-  //   );
-  // }.bind(this);
-
   ValueChart = function(){
     return(
       <React.Fragment>
         <PropertyValueChart
           data={this.props.data}
-          valueOfStockMarketInvestment = {this.props.valueOfStockMarketInvestment}
           width={800}
           height={600}
         />
@@ -85,7 +48,7 @@ class ChartContainer extends React.Component{
   render() {
     return(
       <React.Fragment>
-            <div className="col-9 chartc">
+            <div className="chartc container-padding">
               <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
                 <Tab id="value" title="Value" panel={<this.ValueChart />} />
                 <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />
