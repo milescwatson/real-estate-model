@@ -6,15 +6,15 @@ var _ = require('lodash');
 class PropertyValueChart extends React.Component {
   constructor(props){
     super(props);
-    this.createChart = this.createChart.bind(this);
+    this.drawChart = this.drawChart.bind(this);
   }
 
   componentDidMount() {
-    this.createChart();
+    this.drawChart();
   }
 
   componentDidUpdate() {
-    this.createChart();
+    this.drawChart();
   }
 
   bigNumberString = function(number, maxNumberToDisplay){
@@ -49,21 +49,25 @@ class PropertyValueChart extends React.Component {
 
   };
 
-  createChart() {
-    const node = this.node;
+  drawChart() {
     // var width = document.getElementsByClassName('chartc')[0].offsetWidth;
     // console.log('parentWidth = ', width);
+    var containingElement = document.getElementsByClassName('chartc')[0];
 
     // remove stale chart
-    d3.select(node)
-      .selectAll('g')
+    d3.select('.chartc')
+      .selectAll('svg')
       .remove();
 
-    var width = document.getElementsByClassName('chartc')[0].offsetWidth,
-        height = this.props.height,
-        margin = {top: 20, right: 20, bottom: 30, left: 50},
+    var width = containingElement.offsetWidth,
+        height = containingElement.offsetHeight,
+        margin = {top: 20, right: 20, bottom: 20, left: 50},
         data = this.props.data,
         dataAsArray = [];
+
+        var svg = d3.select('.chartc').append("svg")
+                    .attr("width", width)
+                    .attr("height", height + margin.bottom + margin.top)
 
         // put data into nested array
         _.each(data, (value, key) => {
@@ -78,16 +82,10 @@ class PropertyValueChart extends React.Component {
                     .domain([0, dataLength])
                     .range([margin.left, width-margin.right]);
 
-                    //todo: delete this
-        // var formatYAxisLabels = function(input){
-        //   return(input)
-        // };
-
         // the yScale will be the highest $ value in any array
         var maximumDollarValue = 0;
         _.each(data, (arrayIterator, key) => {
           if(Math.max(...arrayIterator) > maximumDollarValue){
-            // console.log('result = ', Math.max(...arrayIterator));
             maximumDollarValue = Math.max(...arrayIterator);
           }
         })
@@ -105,18 +103,18 @@ class PropertyValueChart extends React.Component {
                         return('$' + output[0] + output[1]);
                       });
 
-        d3.select(node)
+        d3.select("svg")
           .append('g')
           .call(xAxis)
           .attr('transform', `translate(0, ${height-margin.bottom})`);
 
-        d3.select(node)
+        d3.select("svg")
           .append('g')
           .call(yAxis)
           .attr('transform', `translate(${margin.left}, 0)`);
 
         // x-axis label
-        d3.select(node)
+        d3.select("svg")
           .append('text')
           .attr('transform', `translate(${width/2}, ${height})`)
           .text('Time (years)');
@@ -124,7 +122,7 @@ class PropertyValueChart extends React.Component {
         const yAxisLabelTranslate = `translate(${margin.left-40}, ${height/2})` + ' rotate(-90)';
 
         // y-axis label
-        d3.select(node)
+        d3.select("svg")
           .append('text')
           .attr('transform', yAxisLabelTranslate)
           .text('Value ($)');
@@ -157,7 +155,7 @@ class PropertyValueChart extends React.Component {
             });
 
 
-        // var paths = d3.select(node)
+        // var paths = d3.select("svg")
         //   .selectAll('circle')
         //   .data(dataAsArray)
         //   .enter()
@@ -186,7 +184,7 @@ class PropertyValueChart extends React.Component {
             };
 
         _.each(this.props.data, (value, key) => {
-          d3.select(node)
+          d3.select("svg")
             .append('path')
             .datum(value)
             .attr("fill", "none")
@@ -198,7 +196,7 @@ class PropertyValueChart extends React.Component {
         });
 
       // add legend for each dataset
-      var legend = d3.select(node)
+      var legend = d3.select("svg")
         .selectAll('.legend')
         .data(Object.keys(data))
         .enter()
@@ -228,37 +226,6 @@ class PropertyValueChart extends React.Component {
             .attr('y', (key, index) => {
               return(19)
             });
-        //
-        // var legend = svg.selectAll('g')
-        //   .data(cities)
-        //   .enter()
-        //   .append('g')
-        //   .attr('class', 'legend');
-        //
-        //   legend.append('rect')
-        //     .attr('x', width - 20)
-        //     .attr('y', function(d, i) {
-        //       return i * 20;
-        //     })
-        //     .attr('width', 10)
-        //     .attr('height', 10)
-        //     .style('fill', function(d) {
-        //       return color(d.name);
-        //     });
-        //
-        //   legend.append('text')
-        //     .attr('x', width - 8)
-        //     .attr('y', function(d, i) {
-        //       return (i * 20) + 9;
-        //     })
-        //     .text(function(d) {
-        //       return d.name;
-        //     });
-
-  }
-
-  deleteChart() {
-    d3.select(this.node).remove();
   }
 
   render(){
@@ -268,6 +235,14 @@ class PropertyValueChart extends React.Component {
         width={this.props.width}
         height={this.props.height} >
         </svg>
+
+        {window.addEventListener("resize", () => {
+          var containingElement = document.getElementsByClassName('chartc')[0]
+
+          console.log(containingElement.offsetHeight);
+          this.drawChart();
+        })}
+
       </React.Fragment>
     )
   }

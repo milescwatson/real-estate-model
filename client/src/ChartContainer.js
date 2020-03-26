@@ -4,6 +4,8 @@ import './include/css/universal.css';
 import './include/css/ChartContainer.css';
 import PropertyValueChart from './include/PropertyValueChart';
 import { Tab, Tabs } from "@blueprintjs/core";
+import * as d3 from "d3";
+
 
 class ChartContainer extends React.Component{
   constructor(props){
@@ -19,8 +21,6 @@ class ChartContainer extends React.Component{
       <React.Fragment>
         <PropertyValueChart
           data={this.props.data}
-          width={800}
-          height={600}
         />
       </React.Fragment>
     );
@@ -29,15 +29,27 @@ class ChartContainer extends React.Component{
   AmortizationChart = function(){
     return(
       <React.Fragment>
-        <h3>amortization chart</h3>
+        <h6>Amortization Chart coming soon</h6>
       </React.Fragment>
     );
   }.bind(this);
 
+  handleChartDrawPostTabChange = function(){
+    if(this.state.currentView === 'amortization'){
+      d3.select('.chartc')
+        .selectAll('svg')
+        .remove();
+    }else{
+      // draw value chart
+      // this.forceUpdate();
+    }
+  }
+
   handleTabChange = function(selectedTab){
     this.setState({
       currentView: selectedTab
-    })
+    }, this.handleChartDrawPostTabChange);
+
   }.bind(this);
 
   getWidth = function(){
@@ -48,7 +60,7 @@ class ChartContainer extends React.Component{
   render() {
     return(
       <React.Fragment>
-            <div className="chartc container-padding">
+            <div className="chartc container-padding-margin">
               <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
                 <Tab id="value" title="Value" panel={<this.ValueChart />} />
                 <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />

@@ -1,3 +1,4 @@
+
 .projection-table {
   width: 100%;
   margin: 10px;
@@ -31,12 +32,10 @@
   background-color: rgba(0,0,0,.075);
 }
 
-
 .td-noborder {
   border-left-style: hidden !important;
   border-right-style: hidden !important;
 }
-
 
 /* .income-statement-item-row {
   border-top: 1px solid gray;
@@ -66,21 +65,7 @@
   cursor:pointer;
 }
 
-header {
-  height: 60px;
-  background-color: aqua;
-}
-
 section {
-  display: flex;
-  border: 1px dotted gray;
-}
-
-.app {
-  flex: 10;
-  display: flex;
-  flex-flow: row;
-  flex-wrap: wrap;
 }
 
 .sidebar {
@@ -91,24 +76,31 @@ section {
 }
 
 /* maps to a prop-passed class to a div in input-container  */
+.app-row-1 {
+  flex: 10;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+}
+
+.app-row-2 {
+  display:flex;
+}
+
+.placeholder-projections {
+  flex: 1;
+}
+
+.is-container{
+  flex: 1;
+}
+
+
 .input-container {
   flex: 2;
   margin: 10px 20px 10px 20px;
 }
-.chartc {
-  flex: 16;
-}
-.is-container{
-  flex: 6
-}
-.metrics-container {
-  flex: 24 600px;
-}
-.table-container {
-  flex: 24 700px;
-}
 
-.app > * {
-  margin: 10px;
-  border: 1px dotted green;
+.chartc {
+  flex: 10;
 }

@@ -18,8 +18,10 @@
   border: 1px dotted blue;
 }
 
-.container-padding {
+.container-padding-margin {
   padding: 1%;
+  margin: 10px;
+  border: 1px dotted green;
 }
 
 @import "~normalize.css";

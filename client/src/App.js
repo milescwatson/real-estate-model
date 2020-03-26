@@ -11,14 +11,17 @@ import Metric from './Metric.js';
 import NumberFormat from 'react-number-format';
 import InputContainer from './InputContainer';
 import SyncComponent from './SyncComponent';
+import ProjectionTable from './ProjectionTable';
+import {Navbar, Nav, Form, FormControl} from 'react-bootstrap';
+
 var isIconSize = 22;
+
 
 class App extends React.Component{
   constructor(props){
     super(props);
     this.initialState = {
       model : {
-        name: 'untitled model',
         rentYRG: 0.02,
         appreciationYRG: 0.015,
         units: {
@@ -73,6 +76,11 @@ class App extends React.Component{
         loanEndingDate: null,
       },
 
+      metadata: {
+        name: 'untitled model',
+        active: true
+      },
+
       computedArrays: {
         propertyValue: [200000],
         grossRentalIncome: [], // total rents less vaccancy - put the initial value in [1]
@@ -93,12 +101,31 @@ class App extends React.Component{
         paymentsAnnualized: []
       },
 
-      userViews: {
-        defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
-        all: ['year', 'propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'remainingBalance', 'totalEquity', 'cumPrincipal', 'cumInterest', 'annualInterest', 'paymentsAnnualized', 'valueOfStockMarketInvestment'],
-        operatingView: ['year', 'propertyValue', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow'],
-        selectedView: 'all'
+      nameMappings: {
+        propertyValue: "Property Value",
+        grossRentalIncome: "Gross Rental Income",
+        netOperatingExpenses: "Net Operating Expenses",
+        netOperatingIncome: "Net Operating Income",
+        cashFlow: "Cashflow",
+        depreciation: "Depreciation",
+        cashFlowIRS: "Cash Flow IRS",
+        resultingTaxWriteoff: "Resulting Tax Writeoff",
+        valueOfRealEstateInvestment: "Value of Real Estate Investment",
+        valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
+        valueOfStockMarketInvestment: "Value of Stock Market Investment",
+        remainingBalance: "Remaining Balance",
+        totalEquity: "Total Equity",
+        annualInterest: "Annual Interest",
+        cumPrincipal: "Cumulative Principal",
+        cumInterest: "Cumulative Interest",
+        paymentsAnnualized: "Annual Payments"
       }
+      // userViews: {
+      //   defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
+      //   all: ['year', 'propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'remainingBalance', 'totalEquity', 'cumPrincipal', 'cumInterest', 'annualInterest', 'paymentsAnnualized', 'valueOfStockMarketInvestment'],
+      //   operatingView: ['year', 'propertyValue', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow'],
+      //   selectedView: 'all'
+      // }
     }
     this.state = this.initialState;
   };
@@ -114,13 +141,13 @@ class App extends React.Component{
       });
     });
   };
-  computeAllInitialValues = () => {
-    compute.asyncComputeInitial(this.state.model, this.state.computed, this.state.computedArrays, (error, computedResult) => {
-      this.setState({
-        computed: computedResult
-      });
-    });
-  };
+  // computeAllInitialValues = () => {
+  //   compute.asyncComputeInitial(this.state.model, this.state.computed, this.state.computedArrays, (error, computedResult) => {
+  //     this.setState({
+  //       computed: computedResult
+  //     });
+  //   });
+  // };
 
   updateModelState = (e, modelStateParameter) => {
     var valuesStoredInArrayZero = {
@@ -151,8 +178,6 @@ class App extends React.Component{
   };
 
   computeEverything = function(){
-    // this.computeAllCompoundInterestArrays();
-    // this.computeAllInitialValues();
     this.computeAllCompoundInterestArrays();
   }.bind(this);
 
@@ -460,7 +485,7 @@ class App extends React.Component{
 
     return(
       <React.Fragment>
-        <div className="is-container container-padding">
+        <div className="is-container container-padding-margin">
         <h3>Income Statement</h3>
         <table className="is-table">
           <tbody>
@@ -726,7 +751,6 @@ class App extends React.Component{
 
         </tbody>
         </table>
-        <h3>Financial Projections</h3>
       </div>
 
       </React.Fragment>
@@ -762,7 +786,7 @@ class App extends React.Component{
         return({
           model: previousState.model
         });
-      });
+      }, this.computeEverything) ;
     }.bind(this)
 
     switch (param) {
@@ -791,53 +815,54 @@ class App extends React.Component{
       return({
         model: previousState.model
       });
-    });
+    },this.computeEverything());
 
   }.bind(this);
 
   render(){
     return(
       <React.Fragment>
-        <header>
-          <h3>Real Estate Model</h3>
-        </header>
+
+        <Navbar bg="light" variant="light">
+          <Navbar.Brand href="#home">Real Estate Model</Navbar.Brand>
+          <Nav className="mr-auto">
+            <Nav.Link href="#/">Model</Nav.Link>
+            <Nav.Link href="#about">About</Nav.Link>
+          </Nav>
+        </Navbar>
+
 
         <section>
-          <div className="sidebar container-padding">
-            <h4>My Models</h4>
-          </div>
 
           <div className="app">
-              <br />
+              <div className="app-row-1">
+                <br />
+                <InputContainer
+                  className = "input-container container-padding-margin"
+                  purchasePrice = {this.state.computedArrays.propertyValue[0]}
+                  appModel = {this.state.model}
+                  loanLengthYears = {this.state.model.loanLengthYears}
+                  valueOfLand = {this.state.model.valueOfLand}
+                  yearsOutComputation = {this.state.model.yearsOutComputation}
+                  depreciateOver = {this.state.model.depreciateOver}
+                  maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
 
-              <InputContainer
-                className = "input-container container-padding"
-                purchasePrice = {this.state.computedArrays.propertyValue[0]}
-                appModel = {this.state.model}
-                loanLengthYears = {this.state.model.loanLengthYears}
-                valueOfLand = {this.state.model.valueOfLand}
-                yearsOutComputation = {this.state.model.yearsOutComputation}
-                depreciateOver = {this.state.model.depreciateOver}
-                maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
+                  updateParametersCallback = {this.updateParametersCallback}
+                  updateParameterCallback = {this.updateParameter}
+                />
 
-                updateParametersCallback = {this.updateParametersCallback}
-                updateParameterCallback = {this.updateParameter}
-              />
+                <ChartContainer
+                  className = "chart-container"
+                  data={{
+                    'propertyValue': this.state.computedArrays.propertyValue,
+                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
+                  }}
+                />
+              </div>
 
-              <ChartContainer
-                className = "chart-container"
-                data={{
-                  'propertyValue': this.state.computedArrays.propertyValue,
-                  'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
-                }}
-
-              />
-
-              <this.IncomeStatement />
-
-              <div className="metrics-container container-padding">
+              <div className="container-padding-margin">
                 <h3>Key Metrics</h3>
-
+                <div className="metrics-container">
                 <Metric
                   value={(this.state.computedArrays.netOperatingIncome[1]*12) / this.state.computedArrays.propertyValue[1]}
                   label={'Cap Rate'}
@@ -879,24 +904,26 @@ class App extends React.Component{
                   highPositive={true}
                   prefix={'$'}
                 />
-
+            </div>
               </div>
 
-              <div className="table-container">
-              <Table
-                yearsOutComputation={this.state.model.yearsOutComputation}
-                computedArrays = {this.state.computedArrays}
-                userViews = {this.state.userViews}
-                loanLengthYears = {this.state.model.loanLengthYears}
-              />
-              </div>
+          </div>
 
+          <div className="app-row-2">
+            <this.IncomeStatement />
+          </div>
+
+          <div className="container-padding-margin">
+            <ProjectionTable
+              computedArrays={this.state.computedArrays}
+              nameMappings = {this.state.nameMappings}
+              yearsOutComputation = {this.state.model.yearsOutComputation}
+            />
           </div>
 
         </section>
 
       </React.Fragment>
-
     )
   }
 }
