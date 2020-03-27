@@ -103,9 +103,6 @@ class InputContainer extends React.Component{
             onBlur = {(event) => {
               this.updateValuesPercent(event, 'rentYRG')
             }}
-            format = {(input) => {
-              return input + '%';
-            }}
             thousandSeparator={true}
             suffix={'%'}
             defaultValue = {0}

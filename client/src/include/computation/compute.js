@@ -29,15 +29,17 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
       _.each(model.units, (value, key) => {
         sumRents += value.rentPerMonth;
       });
+
       const griInit = sumRents - (model.vaccancyPct * sumRents);
+
       generateGrowthArray(griInit, model.rentYRG, (error, resultingArray) => {
-        resultingArray[0] = sumRents;
+        resultingArray[0] = griInit;
         computedArrays.grossRentalIncome = resultingArray;
         callback(null);
       });
       },
       generateAndMergeExpenseArray = function(callback){
-        var expenseArrays = [],
+        var expenseArrays = [], // all expense arrays
             expenses = model.expenses,
             sumExpenses = 0;
 
@@ -49,6 +51,8 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
             expenseArrays.push(resultingArray)
           });
         });
+
+        console.log('sumExpenses = ', sumExpenses);
 
         // merge these into one noe array
         mergeArrays(expenseArrays, (error, resultingArray) => {
@@ -129,8 +133,6 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
       generateCashflowArray = function(callback){
         for(var year = 0; year <= model.yearsOutComputation; year++){
           computedArrays.cashFlow[year] = (computedArrays.netOperatingIncome[year] - Math.abs(computedArrays.paymentsAnnualized[year]));
-          // console.log('year = ', year);
-          // console.log(Math.abs(computedArrays.paymentsAnnualized[year]));
         }
         callback(null);
       },

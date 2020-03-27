@@ -17,7 +17,7 @@ class ProjectionTable extends React.Component{
     var defaultView = {
       'years': [1,2,3,4,5,10,20,30],
       'yearsString': "1,2,3,4,5,10,20,30",
-      'attributes': ['netOperatingIncome', 'cashFlow', 'valueOfRealEstateInvestment']
+      'attributes': ['propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'paymentsAnnualized', 'cashFlow', 'depreciation', 'cashFlowIRS', 'valueOfRealEstateInvestment', 'valueOfStockMarketInvestment', 'remainingBalance',  'totalEquity', 'annualInterest']
     }
 
     var initialState = {
@@ -45,7 +45,7 @@ class ProjectionTable extends React.Component{
         }
         return isValid
       }
-    }.bind(this);
+    };
 
     if (isValidYears(this.state.selectedViews[0].yearsString) && (this.state.selectedViews[0].yearsString.length) > 0) {
       var yearArray = this.state.selectedViews[0].yearsString.split(',');
@@ -76,7 +76,7 @@ class ProjectionTable extends React.Component{
 
     if(this.state.selectedViews[0]['attributes'].length > 0){
       theadrow.push(
-        <th>
+        <th key={1000}>
           Year
         </th>
       );
@@ -84,7 +84,7 @@ class ProjectionTable extends React.Component{
 
     for (var header = 0; header < this.state.selectedViews[0].attributes.length ; header++){
       theadrow.push(
-        <th>
+        <th key={'header_'+header}>
           {this.props.nameMappings[this.state.selectedViews[0].attributes[header]]}
         </th>
       )
@@ -96,7 +96,7 @@ class ProjectionTable extends React.Component{
       // var yearValue =
       if(this.state.selectedViews[0]['attributes'].length > 0){
         rowItems.push(
-          <td>
+          <td key={'row_'+row}>
             {this.state.selectedViews[0]['years'][row]}
           </td>
         );
@@ -107,8 +107,23 @@ class ProjectionTable extends React.Component{
         var iAttr = this.state.selectedViews[0].attributes[col];
         // console.log('attr, row', iAttr, row);
         // console.log(this.props.computedArrays[iAttr][row]);
+        var tdStyle = {};
+
+        if(iAttr === 'cashFlow'){
+          if(this.props.computedArrays[iAttr][(this.state.selectedViews[0]['years'][row])] > 0){
+            tdStyle = {
+              'background-color': 'lightgreen'
+            }
+          }else {
+            tdStyle = {
+              'background-color': 'indianred'
+            }
+          }
+
+        }
+
         rowItems.push(
-          <td>
+          <td key={col} style ={tdStyle} >
             <NumberFormat
               value = { this.props.computedArrays[iAttr][(this.state.selectedViews[0]['years'][row])] }
               name={iAttr}
@@ -122,7 +137,7 @@ class ProjectionTable extends React.Component{
           </td>
         );
       }
-      var finalRow = <tr>{rowItems}</tr>
+      var finalRow = <tr key={col+','+row}>{rowItems}</tr>
       tableVis.push(finalRow);
     }
 
@@ -130,8 +145,10 @@ class ProjectionTable extends React.Component{
       <React.Fragment>
         <div className="projections-table-container">
           <table className="table table-hover table-bordered">
-            {tableHeader}
-            {tableVis}
+            <tbody>
+              {tableHeader}
+              {tableVis}
+            </tbody>
           </table>
         </div>
       </React.Fragment>
@@ -166,10 +183,10 @@ class ProjectionTable extends React.Component{
     var counter = 0;
     Object.keys(this.props.computedArrays).forEach((key,index) => {
       rowStorage.push(
-        <React.Fragment>
+        <React.Fragment key={index}>
 
           <Form.Check
-            key={key}
+            key={index}
             checked={this.attributeExists(key)}
             type={'checkbox'}
             id={key}
@@ -186,15 +203,15 @@ class ProjectionTable extends React.Component{
 
       if(counter === 4){
         componentCheckboxesVisual.push(
-          <td>
+          <td key={index}>
             {rowStorage}
           </td>
         );
         rowStorage = [];
         counter = 0;
       }
-
     });
+    componentCheckboxesVisual.push(rowStorage);
 
     return(
       <React.Fragment>
@@ -202,11 +219,14 @@ class ProjectionTable extends React.Component{
           <Card.Header as="h5">Projection Table Settings</Card.Header>
           <Card.Body>
               <h6>Attributes</h6>
-              <table class="settings-table">
+              <table className="settings-table">
+                <tbody>
                 <tr>
                   {componentCheckboxesVisual}
                 </tr>
+                </tbody>
               </table>
+              <this.Years />
           </Card.Body>
         </Card>
       </React.Fragment>
@@ -214,31 +234,12 @@ class ProjectionTable extends React.Component{
   }.bind(this);
 
   Years = function(){
-    var isValidYears = function(str){
-      if (str !== 'undefined') {
-        var years = str.split(','),
-            isValid = true;
-
-        for (var i = 0; i < years.length; i++) {
-          if (isNaN(years[i])) {
-            isValid = false;
-          }
-          if (years[i] > 300) {
-            // can't be greater than n years
-            isValid = false;
-          }
-
-        }
-        return isValid
-      }
-    }.bind(this);
-
     var validationClassname = "";
     // validationClassname = isValidYears(this.state.selectedViews[0].yearString) ? "" : "bp3-intent-danger"
 
     return(
       <React.Fragment>
-        <div className={"bp3-input-group " + validationClassname}>
+        <div className={"bp3-input-group " + validationClassname + ' years-input'}>
         Years:  <input type="text" className={"bp3-input"} value={this.state.selectedViews[0].yearsString} onChange={(event)=>{
             var val = event.target.value;
             this.setState((workingState) => {

@@ -119,7 +119,6 @@ exports.returnAmortizationObject = function(request, response){
       callback(null);
     }
   ], (result) => {
-    console.log(amortization);
     response.send(amortization);
   });
 }

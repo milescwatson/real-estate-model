@@ -1,21 +1,19 @@
 import React from 'react';
-import { Button, Icon } from "@blueprintjs/core";
+import { Icon } from "@blueprintjs/core";
 import './include/css/bootstrap.min.css';
 import './include/css/app.css';
 import './include/css/universal.css';
-import Table from './Table.js';
-import UserView from './UserView';
 import compute from './include/computation/compute';
 import ChartContainer from './ChartContainer';
 import Metric from './Metric.js';
 import NumberFormat from 'react-number-format';
 import InputContainer from './InputContainer';
-import SyncComponent from './SyncComponent';
 import ProjectionTable from './ProjectionTable';
-import {Navbar, Nav, Form, FormControl} from 'react-bootstrap';
+import {Navbar, Nav} from 'react-bootstrap';
+
+var _ = require('lodash');
 
 var isIconSize = 22;
-
 
 class App extends React.Component{
   constructor(props){
@@ -72,10 +70,6 @@ class App extends React.Component{
         unitRows: []
       },
 
-      computed: {
-        loanEndingDate: null,
-      },
-
       metadata: {
         name: 'untitled model',
         active: true
@@ -106,6 +100,7 @@ class App extends React.Component{
         grossRentalIncome: "Gross Rental Income",
         netOperatingExpenses: "Net Operating Expenses",
         netOperatingIncome: "Net Operating Income",
+        paymentsAnnualized: "Monthly Payments",
         cashFlow: "Cashflow",
         depreciation: "Depreciation",
         cashFlowIRS: "Cash Flow IRS",
@@ -113,12 +108,11 @@ class App extends React.Component{
         valueOfRealEstateInvestment: "Value of Real Estate Investment",
         valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
         valueOfStockMarketInvestment: "Value of Stock Market Investment",
-        remainingBalance: "Remaining Balance",
+        remainingBalance: "Loan Balance Remaining",
         totalEquity: "Total Equity",
         annualInterest: "Annual Interest",
         cumPrincipal: "Cumulative Principal",
-        cumInterest: "Cumulative Interest",
-        paymentsAnnualized: "Annual Payments"
+        cumInterest: "Cumulative Interest"
       }
       // userViews: {
       //   defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
@@ -180,6 +174,15 @@ class App extends React.Component{
   computeEverything = function(){
     this.computeAllCompoundInterestArrays();
   }.bind(this);
+
+  getDebtServiceString = function(){
+    if(this.state.computedArrays.paymentsAnnualized[1] === 'undefined' || isNaN(this.state.computedArrays.paymentsAnnualized[1])){
+      return(0.00);
+    }else{
+      return(this.state.computedArrays.paymentsAnnualized[1]);
+    }
+  }.bind(this);
+
 
   IncomeStatement = function(){
     var unitRowsVisual = [],
@@ -457,14 +460,6 @@ class App extends React.Component{
     GenerateUnitRows();
     GenerateExpenseRows();
 
-    var getDebtServiceString = function(){
-      if(this.state.computedArrays.paymentsAnnualized[1] === 'undefined' || isNaN(this.state.computedArrays.paymentsAnnualized[1])){
-        return(0.00);
-      }else{
-        return(this.state.computedArrays.paymentsAnnualized[1]);
-      }
-    }.bind(this);
-
     var cashflowRowStyle = {};
     var generateCashflowStyle = function(){
       if (this.state.computedArrays.cashFlow[0] < 0){
@@ -483,6 +478,15 @@ class App extends React.Component{
     }.bind(this);
     generateCashflowStyle();
 
+    var rentSum = 0.0;
+
+    var sumRents = function(){
+      _.each(this.state.model.units, (value, key) => {
+        rentSum += value.rentPerMonth;
+      });
+    }.bind(this);
+    sumRents();
+
     return(
       <React.Fragment>
         <div className="is-container container-padding-margin">
@@ -490,7 +494,7 @@ class App extends React.Component{
         <table className="is-table">
           <tbody>
           <tr className="income-statement-header">
-            <td className="td-noborder"> <h5>Units</h5></td>
+            <td className="td-noborder"> <h5>Units / Income</h5></td>
             <td className="income-statement-title td-noborder">Monthly</td>
             <td className="income-statement-title td-noborder">Annual</td>
             <td className="td-noborder"></td>
@@ -504,7 +508,7 @@ class App extends React.Component{
             <td>
 
               <NumberFormat
-                value = {this.state.computedArrays.grossRentalIncome[0] }
+                value = {rentSum }
                 name={'totalRents_'}
                 thousandSeparator={true}
                 prefix={'$'}
@@ -534,7 +538,7 @@ class App extends React.Component{
             </td>
             <td>
               <NumberFormat
-                value = {(this.state.computedArrays.grossRentalIncome[0] * this.state.model.vaccancyPct)}
+                value = {rentSum - (this.state.computedArrays.grossRentalIncome[0])}
                 name={'vaccancyLossMonthly_'}
                 thousandSeparator={true}
                 prefix={'$('}
@@ -607,8 +611,7 @@ class App extends React.Component{
                 value = { (this.state.computedArrays.grossRentalIncome[1] * this.state.model.propertyManagerPercentageOfGrossRent) }
                 name={'pmMonth'}
                 thousandSeparator={true}
-                prefix={'$('}
-                suffix={')'}
+                prefix={'$'}
                 defaultValue = {0}
                 fixedDecimalScale = {true}
                 decimalScale = {2}
@@ -621,8 +624,7 @@ class App extends React.Component{
                 value = { (this.state.computedArrays.grossRentalIncome[1] * this.state.model.propertyManagerPercentageOfGrossRent) * 12 }
                 name={'pmYear'}
                 thousandSeparator={true}
-                prefix={'$('}
-                suffix={')'}
+                prefix={'$'}
                 defaultValue = {0}
                 fixedDecimalScale = {true}
                 decimalScale = {2}
@@ -640,7 +642,7 @@ class App extends React.Component{
                 value = { this.state.computedArrays.netOperatingExpenses[0] }
                 name={'noeMonth'}
                 thousandSeparator={true}
-                prefix={'$('} suffix={')'}
+                prefix={'$'}
                 defaultValue = {0}
                 fixedDecimalScale = {true}
                 decimalScale = {2}
@@ -653,7 +655,7 @@ class App extends React.Component{
                 value = { this.state.computedArrays.netOperatingExpenses[0] * 12 }
                 name={'noeAnn_'}
                 thousandSeparator={true}
-                prefix={'$('} suffix={')'}
+                prefix={'$'}
                 defaultValue = {0}
                 fixedDecimalScale = {true}
                 decimalScale = {2}
@@ -666,29 +668,33 @@ class App extends React.Component{
           <tr>
             <td>Net Operating Income</td>
             <td>
-              <NumberFormat
-                value = { this.state.computedArrays.netOperatingIncome[0]}
-                name={'noi_'}
-                thousandSeparator={true}
-                prefix={'$'}
-                defaultValue = {0}
-                fixedDecimalScale = {true}
-                decimalScale = {2}
-                displayType = {'text'}
-              />
+              <u>
+                <NumberFormat
+                  value = { this.state.computedArrays.netOperatingIncome[0]}
+                  name={'noi_'}
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  defaultValue = {0}
+                  fixedDecimalScale = {true}
+                  decimalScale = {2}
+                  displayType = {'text'}
+                />
+              </u>
             </td>
 
             <td>
-              <NumberFormat
-                value = { this.state.computedArrays.netOperatingIncome[0] * 12 }
-                name={'noiYear_'}
-                thousandSeparator={true}
-                prefix={'$'}
-                defaultValue = {0}
-                fixedDecimalScale = {true}
-                decimalScale = {2}
-                displayType = {'text'}
-              />
+              <u>
+                <NumberFormat
+                  value = { this.state.computedArrays.netOperatingIncome[0] * 12 }
+                  name={'noiYear_'}
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  defaultValue = {0}
+                  fixedDecimalScale = {true}
+                  decimalScale = {2}
+                  displayType = {'text'}
+                />
+              </u>
             </td>
 
           </tr>
@@ -697,7 +703,7 @@ class App extends React.Component{
             <td>Debt Service</td>
             <td>
               <NumberFormat
-                value={Math.abs(getDebtServiceString())}
+                value={Math.abs(this.getDebtServiceString())}
                 thousandSeparator={true} prefix={'$('}
                 suffix={')'}
                 defaultValue = {0}
@@ -709,7 +715,7 @@ class App extends React.Component{
 
             <td>
               <NumberFormat
-                value={Math.abs(getDebtServiceString()*12)}
+                value={Math.abs(this.getDebtServiceString()*12)}
                 thousandSeparator={true} prefix={'$('}
                 suffix={')'}
                 defaultValue = {0}
@@ -816,7 +822,6 @@ class App extends React.Component{
         model: previousState.model
       });
     },this.computeEverything());
-
   }.bind(this);
 
   render(){
@@ -824,10 +829,8 @@ class App extends React.Component{
       <React.Fragment>
 
         <Navbar bg="light" variant="light">
-          <Navbar.Brand href="#home">Real Estate Model</Navbar.Brand>
+          <Navbar.Brand href="">Real Estate Model</Navbar.Brand>
           <Nav className="mr-auto">
-            <Nav.Link href="#/">Model</Nav.Link>
-            <Nav.Link href="#about">About</Nav.Link>
           </Nav>
         </Navbar>
 
@@ -878,9 +881,9 @@ class App extends React.Component{
                   value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
                   label={'Gross Rent Multiplier'}
                   hint={'PP / GRI'}
-                  range={[0,10]}
+                  range={[0,40]}
                   colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={true}
+                  highPositive={false}
                   prefix={''}
                 />
 
@@ -888,7 +891,7 @@ class App extends React.Component{
                   value={(this.state.computedArrays.cashFlow[0] * 12) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
                   label={'Cash-On-Cash Return'}
                   hint={'pre-tax cash flow / cash invested (down payment)'}
-                  range={[0,10]}
+                  range={[0,100]}
                   colorProgression={['#721c24','#856404','#155724']}
                   highPositive={true}
                   prefix={''}
@@ -917,7 +920,6 @@ class App extends React.Component{
             <ProjectionTable
               computedArrays={this.state.computedArrays}
               nameMappings = {this.state.nameMappings}
-              yearsOutComputation = {this.state.model.yearsOutComputation}
             />
           </div>
 

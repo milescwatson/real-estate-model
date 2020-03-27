@@ -103,13 +103,11 @@ class PropertyValueChart extends React.Component {
                         return('$' + output[0] + output[1]);
                       });
 
-        d3.select("svg")
-          .append('g')
+        svg.append('g')
           .call(xAxis)
           .attr('transform', `translate(0, ${height-margin.bottom})`);
 
-        d3.select("svg")
-          .append('g')
+        svg.append('g')
           .call(yAxis)
           .attr('transform', `translate(${margin.left}, 0)`);
 
@@ -119,7 +117,7 @@ class PropertyValueChart extends React.Component {
           .attr('transform', `translate(${width/2}, ${height})`)
           .text('Time (years)');
 
-        const yAxisLabelTranslate = `translate(${margin.left-40}, ${height/2})` + ' rotate(-90)';
+        const yAxisLabelTranslate = `translate(${margin.left-40}, ${height/2}) rotate(-90)`;
 
         // y-axis label
         d3.select("svg")
@@ -237,9 +235,6 @@ class PropertyValueChart extends React.Component {
         </svg>
 
         {window.addEventListener("resize", () => {
-          var containingElement = document.getElementsByClassName('chartc')[0]
-
-          console.log(containingElement.offsetHeight);
           this.drawChart();
         })}
 

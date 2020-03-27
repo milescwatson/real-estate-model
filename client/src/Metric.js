@@ -126,9 +126,10 @@ class Metric extends React.Component{
 
   render(){
     var textStyle = {
-      'color': this.generateStyle()
+      'color': "black"
     }
-
+    // used to be this.generateStyle
+    
     return(
       <React.Fragment>
         <div className="metric-container">

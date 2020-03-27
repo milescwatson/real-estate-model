@@ -32,7 +32,7 @@ class ChartContainer extends React.Component{
         <h6>Amortization Chart coming soon</h6>
       </React.Fragment>
     );
-  }.bind(this);
+  }
 
   handleChartDrawPostTabChange = function(){
     if(this.state.currentView === 'amortization'){
@@ -55,7 +55,7 @@ class ChartContainer extends React.Component{
   getWidth = function(){
     var width = document.getElementsByClassName('chartc')[0].offsetWidth;
     return(width);
-  }.bind(this);
+  }
 
   render() {
     return(

@@ -5,3 +5,7 @@ td {
 .projections-table-container{
   overflow: scroll;
 }
+
+.years-input {
+  width: 250px;
+}
