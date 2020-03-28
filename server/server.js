@@ -44,7 +44,7 @@ app.get('/health', function(request, response, next) {
 
 app.post('/amortization-object', amortization.returnAmortizationObject);
 
-app.use(express.static(__dirname + '/../frontend'));
+app.use(express.static(__dirname + '/frontend-build'));
 
 app.listen(port, function() {
   console.log(`listening on port ${port}!`);
