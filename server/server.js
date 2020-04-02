@@ -11,16 +11,13 @@ var express = require('express'),
     LocalStrategy = require('passport-local').Strategy,
     authentication = require('./authenticate'),
     amortization = require('./computation/amortization'),
-    port = 80;
+    port = 3001;
 
 app.use(bodyParser.json());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: 'merrakesh', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
-
-// app.use(compression());
-
 
 passport.serializeUser(authentication.serializeUser);
 passport.deserializeUser(authentication.deserializeUser);

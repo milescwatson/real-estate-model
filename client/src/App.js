@@ -97,14 +97,14 @@ class App extends React.Component{
 
       nameMappings: {
         propertyValue: "Property Value",
-        grossRentalIncome: "Gross Rental Income",
-        netOperatingExpenses: "Net Operating Expenses",
-        netOperatingIncome: "Net Operating Income",
-        paymentsAnnualized: "Monthly Payments",
-        cashFlow: "Cashflow",
-        depreciation: "Depreciation",
-        cashFlowIRS: "Cash Flow IRS",
-        resultingTaxWriteoff: "Resulting Tax Writeoff",
+        grossRentalIncome: "Gross Rental Income (M)",
+        netOperatingExpenses: "Net Operating Expenses (M)",
+        netOperatingIncome: "Net Operating Income (M)",
+        paymentsAnnualized: "Mortgage Payment (M)",
+        cashFlow: "Cashflow (A)",
+        depreciation: "Depreciation (A)",
+        cashFlowIRS: "Cash Flow IRS (A)",
+        resultingTaxWriteoff: "Resulting Tax Writeoff (A)",
         valueOfRealEstateInvestment: "Value of Real Estate Investment",
         valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
         valueOfStockMarketInvestment: "Value of Stock Market Investment",
@@ -899,7 +899,18 @@ class App extends React.Component{
                 />
 
                 <Metric
-                  value={this.state.computedArrays.cashFlow[0]}
+                  value={((this.state.computedArrays.cashFlow[0] * 12) + (this.state.computedArrays.valueOfRealEstateInvestment[1] - this.state.computedArrays.valueOfRealEstateInvestment[0])  ) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                  label={'Cash-On-Cash Return, incl. Equity'}
+                  hint={'pre-tax cash flow / cash invested (down payment)'}
+                  range={[0,100]}
+                  colorProgression={['#721c24','#856404','#155724']}
+                  highPositive={true}
+                  prefix={''}
+                  postfix={'%'}
+                />
+
+                <Metric
+                  value={this.state.computedArrays.cashFlow[0] * 12}
                   label={'First Year Cashflow'}
                   hint={'pre-tax cash flow / cash invested (down payment)'}
                   range={[0,0]}

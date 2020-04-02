@@ -52,8 +52,6 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
           });
         });
 
-        console.log('sumExpenses = ', sumExpenses);
-
         // merge these into one noe array
         mergeArrays(expenseArrays, (error, resultingArray) => {
           // add in property management

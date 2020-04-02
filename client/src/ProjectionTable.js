@@ -112,14 +112,13 @@ class ProjectionTable extends React.Component{
         if(iAttr === 'cashFlow'){
           if(this.props.computedArrays[iAttr][(this.state.selectedViews[0]['years'][row])] > 0){
             tdStyle = {
-              'background-color': 'lightgreen'
+              'backgroundColor': 'lightgreen'
             }
           }else {
             tdStyle = {
-              'background-color': 'indianred'
+              'backgroundColor': 'indianred'
             }
           }
-
         }
 
         rowItems.push(

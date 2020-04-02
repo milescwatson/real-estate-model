@@ -50,8 +50,6 @@ class PropertyValueChart extends React.Component {
   };
 
   drawChart() {
-    // var width = document.getElementsByClassName('chartc')[0].offsetWidth;
-    // console.log('parentWidth = ', width);
     var containingElement = document.getElementsByClassName('chartc')[0];
 
     // remove stale chart
@@ -59,139 +57,115 @@ class PropertyValueChart extends React.Component {
       .selectAll('svg')
       .remove();
 
-    var width = containingElement.offsetWidth,
-        height = containingElement.offsetHeight,
-        margin = {top: 20, right: 20, bottom: 20, left: 50},
+    var margin = {top: 20, right: 20, bottom: 20, left: 50},
+        height = containingElement.offsetHeight + margin.top + margin.bottom,
         data = this.props.data,
         dataAsArray = [];
 
-        var svg = d3.select('.chartc').append("svg")
-                    .attr("width", width)
-                    .attr("height", height + margin.bottom + margin.top)
+    var dataWidth = containingElement.clientWidth - margin.left - margin.right;
+    // var dataHeight = containingElement.innerHeight - margin.left - margin.right;
 
-        // put data into nested array
-        _.each(data, (value, key) => {
-          dataAsArray.push(value);
+    var svg = d3.select('.chartc').append("svg")
+                // .attr("width", dataWidth + margin.left + margin.right)
+                .attr("width", "100%")
+                .attr("height", height + (height*0.05));
+
+    // put data into nested array
+    _.each(data, (value, key) => {
+      dataAsArray.push(value);
+    });
+
+    var dataLength = (data[Object.keys(data)[0]]).length;
+    // the xscale is going to be number years
+    // every array will have the same length, so will just use the first one
+
+    // console.log('dataWidth', dataWidth);
+    var xScale = d3.scaleLinear()
+                .domain([0, dataLength+2])
+                .range([margin.left + 20, dataWidth] );
+
+    // console.log('width 3', document.getElementsByClassName('chartc')[0].clientWidth);
+
+    // the yScale will be the highest $ value in any array
+    var maximumDollarValue = 0;
+    _.each(data, (arrayIterator, key) => {
+      if(Math.max(...arrayIterator) > maximumDollarValue){
+        maximumDollarValue = Math.max(...arrayIterator);
+      }
+    })
+
+    var yScale = d3.scaleLinear()
+                 .domain([0, (maximumDollarValue + (maximumDollarValue*.10) ) ])
+                 .range([height-margin.bottom, margin.top]);
+
+    var xAxis = d3.axisBottom(xScale)
+                  .tickSizeOuter(0);
+
+    var yAxis = d3.axisLeft(yScale)
+                  .tickFormat((input) => {
+                    var output = this.bigNumberString(input);
+                    return('$' + output[0] + output[1]);
+                  });
+
+    svg.append('g')
+      .call(xAxis)
+      .attr('transform', `translate(0, ${height-margin.bottom - 20})`)
+
+    svg.append('g')
+      .call(yAxis)
+      .attr('transform', `translate(${margin.left + 20}, 0)`);
+
+    // x-axis label
+    d3.select("svg")
+      .append('text')
+      .attr('transform', `translate(${dataWidth/2}, ${height})`)
+      .text('Time (years)');
+
+    const yAxisLabelTranslate = `translate(${margin.left - 30}, ${height/2}) rotate(-90)`;
+
+    // y-axis label
+    d3.select("svg")
+      .append('text')
+      .attr('transform', yAxisLabelTranslate)
+      .text('Value ($)');
+
+    var d3Line = d3.line()
+        .x(function(d){
+          var index = arguments[1];
+          return(xScale(index));
+        })
+        .y(function(d){
+          return(yScale(d));
         });
 
-        var dataLength = (data[Object.keys(data)[0]]).length;
-        // the xscale is going to be number years
-        // every array will have the same length, so will just use the first one
+    var colorMapping = {
+      'stockMarketValue': 'red',
+      'propertyValue': 'steelblue'
+    };
 
-        var xScale = d3.scaleLinear()
-                    .domain([0, dataLength])
-                    .range([margin.left, width-margin.right]);
-
-        // the yScale will be the highest $ value in any array
-        var maximumDollarValue = 0;
-        _.each(data, (arrayIterator, key) => {
-          if(Math.max(...arrayIterator) > maximumDollarValue){
-            maximumDollarValue = Math.max(...arrayIterator);
+    var nameMapping = {
+      'stockMarketValue': 'Stock Market Value',
+      'propertyValue': 'Property Value'
+        },
+        mapName = function(key){
+          if(Object.keys(nameMapping).includes(key)){
+            return(nameMapping[key]);
+          }else{
+            return(key);
           }
-        })
-
-        var yScale = d3.scaleLinear()
-                     .domain([0, (maximumDollarValue + (maximumDollarValue*.10) ) ])
-                     .range([height-margin.bottom, margin.top]);
-
-        var xAxis = d3.axisBottom(xScale)
-                      .tickSizeOuter(0);
-
-        var yAxis = d3.axisLeft(yScale)
-                      .tickFormat((input) => {
-                        var output = this.bigNumberString(input);
-                        return('$' + output[0] + output[1]);
-                      });
-
-        svg.append('g')
-          .call(xAxis)
-          .attr('transform', `translate(0, ${height-margin.bottom})`);
-
-        svg.append('g')
-          .call(yAxis)
-          .attr('transform', `translate(${margin.left}, 0)`);
-
-        // x-axis label
-        d3.select("svg")
-          .append('text')
-          .attr('transform', `translate(${width/2}, ${height})`)
-          .text('Time (years)');
-
-        const yAxisLabelTranslate = `translate(${margin.left-40}, ${height/2}) rotate(-90)`;
-
-        // y-axis label
-        d3.select("svg")
-          .append('text')
-          .attr('transform', yAxisLabelTranslate)
-          .text('Value ($)');
-
-        // var propertyValueLine = d3.line()
-        //           .x(function(d){
-        //             var index = arguments[1];
-        //             return(xScale(index));
-        //           })
-        //           .y(function(d){
-        //             return(yScale(d));
-        //           });
-        //
-        // var marketValueLine = d3.line()
-        //   .x(function(d){
-        //     var index = arguments[1];
-        //     return(xScale(index));
-        //   })
-        //   .y(function(d){
-        //     return(yScale(d));
-        // });
-
-        var d3Line = d3.line()
-            .x(function(d){
-              var index = arguments[1];
-              return(xScale(index));
-            })
-            .y(function(d){
-              return(yScale(d));
-            });
-
-
-        // var paths = d3.select("svg")
-        //   .selectAll('circle')
-        //   .data(dataAsArray)
-        //   .enter()
-        //   .append('circle')
-        //   .attr('r', '5.5')
-        //   .attr('class', ()=> {
-        //     console.log('classArgs = ', arguments);
-        //     return('hello');
-        //   });
-
-        var colorMapping = {
-          'stockMarketValue': 'red',
-          'propertyValue': 'steelblue'
         };
 
-        var nameMapping = {
-          'stockMarketValue': 'Stock Market Value',
-          'propertyValue': 'Property Value'
-            },
-            mapName = function(key){
-              if(Object.keys(nameMapping).includes(key)){
-                return(nameMapping[key]);
-              }else{
-                return(key);
-              }
-            };
-
-        _.each(this.props.data, (value, key) => {
-          d3.select("svg")
-            .append('path')
-            .datum(value)
-            .attr("fill", "none")
-            .attr("stroke", colorMapping[key])
-            .attr("stroke-width", 1.5)
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-linecap", "round")
-            .attr("d", d3Line);
-        });
+    _.each(this.props.data, (value, key) => {
+      d3.select("svg")
+        .append('path')
+        .datum(value)
+        .attr("fill", "none")
+        .attr("stroke", colorMapping[key])
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("d", d3Line);
+    });
 
       // add legend for each dataset
       var legend = d3.select("svg")
@@ -229,18 +203,12 @@ class PropertyValueChart extends React.Component {
   render(){
     return(
       <React.Fragment>
-        <svg className={'chart-svg'} ref={node => this.node = node}
-        width={this.props.width}
-        height={this.props.height} >
-        </svg>
-
+        <svg className={'chart-svg'} />
         {window.addEventListener("resize", () => {
           this.drawChart();
         })}
-
       </React.Fragment>
     )
   }
 }
-
 export default PropertyValueChart;

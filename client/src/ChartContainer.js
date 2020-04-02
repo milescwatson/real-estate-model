@@ -52,15 +52,16 @@ class ChartContainer extends React.Component{
 
   }.bind(this);
 
-  getWidth = function(){
-    var width = document.getElementsByClassName('chartc')[0].offsetWidth;
-    return(width);
-  }
+  // getWidth = function(){
+  //   var width = document.getElementsByClassName('chartc')[0].offsetWidth;
+  //   console.log(width);
+  //   return(width);
+  // }
 
   render() {
     return(
       <React.Fragment>
-            <div className="chartc container-padding-margin">
+            <div className="chartc container-padding-margin-chart">
               <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
                 <Tab id="value" title="Value" panel={<this.ValueChart />} />
                 <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />
