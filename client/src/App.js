@@ -1,3 +1,10 @@
+/*
+Get stats/data from iex
+https://iexcloud.io/docs/api/#mortgage-rates
+
+*/
+
+
 import React from 'react';
 import { Icon } from "@blueprintjs/core";
 import './include/css/bootstrap.min.css';
@@ -25,7 +32,7 @@ class App extends React.Component{
         units: {
           1: {
             name: 'Unit 1',
-            rentPerMonth: 2300.00,
+            rentPerMonth: 2200.00,
           }
         },
         expenses: {
@@ -52,7 +59,6 @@ class App extends React.Component{
         incomeTaxRate: 0.3,
         yearsOutComputation: 35,
         loanLengthYears: 30,
-        initialFixedCost: 0,
         depreciateOver: 25,
         maxWriteoffPerYear: 15000
       },
@@ -858,7 +864,7 @@ class App extends React.Component{
                   className = "chart-container"
                   data={{
                     'propertyValue': this.state.computedArrays.propertyValue,
-                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
+                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment
                   }}
                 />
               </div>
@@ -867,7 +873,7 @@ class App extends React.Component{
                 <h3>Key Metrics</h3>
                 <div className="metrics-container">
                 <Metric
-                  value={(this.state.computedArrays.netOperatingIncome[1]*12) / this.state.computedArrays.propertyValue[1]}
+                  value={(this.state.computedArrays.netOperatingIncome[0]*12) / this.state.computedArrays.propertyValue[0]}
                   label={'Cap Rate'}
                   hint={'NOI / Purchase Price'}
                   range={[0,10]}
@@ -888,7 +894,7 @@ class App extends React.Component{
                 />
 
                 <Metric
-                  value={(this.state.computedArrays.cashFlow[0] * 12) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                  value={(this.state.computedArrays.cashFlow[0])*12 / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
                   label={'Cash-On-Cash Return'}
                   hint={'pre-tax cash flow / cash invested (down payment)'}
                   range={[0,100]}

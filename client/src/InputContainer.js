@@ -300,6 +300,8 @@ class InputContainer extends React.Component{
             var val = event.target.value;
             const regex = /years/gi;
             val = val.replace(regex,'');
+            val = parseFloat(val);
+            
             this.updateValues(val, 'depreciateOver', true);
           }}
           thousandSeparator={true}

@@ -6,6 +6,10 @@ import PropertyValueChart from './include/PropertyValueChart';
 import { Tab, Tabs } from "@blueprintjs/core";
 import * as d3 from "d3";
 
+/*
+Promising: https://www.chartjs.org/samples/latest/charts/area/line-stacked.html
+
+*/
 
 class ChartContainer extends React.Component{
   constructor(props){

@@ -44,11 +44,11 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
             sumExpenses = 0;
 
         // collect all expense growth arrays
-        Object.keys(expenses).forEach((item) => {
-          sumExpenses += expenses[item].amount;
-          generateGrowthArray(expenses[item].amount, expenses[item].yrg, (error, resultingArray) => {
-            // expenses[item].growthArray = resultingArray;
-            expenseArrays.push(resultingArray)
+        Object.keys(expenses).forEach((expenseItem) => {
+          sumExpenses += expenses[expenseItem].amount;
+          generateGrowthArray(expenses[expenseItem].amount, expenses[expenseItem].yrg, (error, resultingArray) => {
+            // expenses[expenseItem].growthArray = resultingArray;
+            expenseArrays.push(resultingArray);
           });
         });
 
@@ -65,9 +65,13 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
         });
       },
       generateNOIArray = function(callback){
-        _.each(computedArrays.grossRentalIncome, (value, key) => {
-          computedArrays.netOperatingIncome[key] = value - computedArrays.netOperatingExpenses[key];
-        });
+        // _.each(computedArrays.grossRentalIncome, (value, key) => {
+        //   computedArrays.netOperatingIncome[key] = value - computedArrays.netOperatingExpenses[key];
+        // });
+        for (var year = 0; year < model.yearsOutComputation; year++) {
+          computedArrays.netOperatingIncome[year] = (computedArrays.grossRentalIncome[year] - computedArrays.netOperatingExpenses[year]);
+        }
+
         callback(null);
       },
       generateAmortizationArrays = function(callback){
@@ -145,6 +149,7 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
       generateDepreciationArray = function(callback){
         const purchasePrice = computedArrays.propertyValue[0];
         const depPerYear = (purchasePrice - model.valueOfLand) / model.depreciateOver;
+        computedArrays.depreciation[0] = 0;
 
         for(var i = 1; i <= model.yearsOutComputation; i++){
           if (i <= model.depreciateOver){
@@ -154,13 +159,12 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
           }
         }
         callback(null);
-
       },
       generateValueOfREInvestment = function(callback){
         var cumCashflow = 0;
         for (var year = 0; year <= model.yearsOutComputation; year++) {
           cumCashflow += computedArrays.cashFlow[year];
-          computedArrays.valueOfRealEstateInvestment[year] = computedArrays.totalEquity[year] + cumCashflow;
+          computedArrays.valueOfRealEstateInvestment[year] = computedArrays.totalEquity[year] = cumCashflow;
         }
         callback(null);
       },

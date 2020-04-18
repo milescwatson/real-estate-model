@@ -109,7 +109,7 @@ class PropertyValueChart extends React.Component {
 
     svg.append('g')
       .call(xAxis)
-      .attr('transform', `translate(0, ${height-margin.bottom - 20})`)
+      .attr('transform', `translate(0, ${height-margin.bottom})`)
 
     svg.append('g')
       .call(yAxis)
@@ -118,7 +118,7 @@ class PropertyValueChart extends React.Component {
     // x-axis label
     d3.select("svg")
       .append('text')
-      .attr('transform', `translate(${dataWidth/2}, ${height})`)
+      .attr('transform', `translate(${dataWidth/2}, ${height+20})`)
       .text('Time (years)');
 
     const yAxisLabelTranslate = `translate(${margin.left - 30}, ${height/2}) rotate(-90)`;
@@ -140,12 +140,14 @@ class PropertyValueChart extends React.Component {
 
     var colorMapping = {
       'stockMarketValue': 'red',
-      'propertyValue': 'steelblue'
+      'propertyValue': 'steelblue',
+      'valueOfRealEstateInvestment': 'green'
     };
 
     var nameMapping = {
       'stockMarketValue': 'Stock Market Value',
-      'propertyValue': 'Property Value'
+      'propertyValue': 'Property Value',
+      'valueOfRealEstateInvestment': 'Total Value Of RE Investment'
         },
         mapName = function(key){
           if(Object.keys(nameMapping).includes(key)){
@@ -177,7 +179,7 @@ class PropertyValueChart extends React.Component {
 
       legend.append('rect')
             .attr('x', function(key,index){
-              return(((index+1) * 150)+60);
+              return(((index+1) * 220)+60);
             })
             .attr('y', (key,index,selection) => {
               return(10)
@@ -193,7 +195,7 @@ class PropertyValueChart extends React.Component {
               return(mapName(key));
             })
             .attr('x', (key, index) => {
-              return(((index+1) * 150)+90);
+              return(((index+1) * 220)+90);
             })
             .attr('y', (key, index) => {
               return(19)
