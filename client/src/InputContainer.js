@@ -256,22 +256,6 @@ class InputContainer extends React.Component{
       </div>
 
       <div className="input-item">
-        Income Tax Rate %
-        <NumberFormat
-   	 			 className={"bp3-input"}
-          value = {this.state.model.incomeTaxRate}
-          onBlur = {(event) => {
-            this.updateValuesPercent(event, 'incomeTaxRate');
-          }}
-          thousandSeparator={true}
-          suffix={'%'}
-          defaultValue = {0}
-          fixedDecimalScale = {true}
-          decimalScale = {2}
-        />
-      </div>
-
-      <div className="input-item">
         Years Out Computation
         <NumberFormat
    	 			 className={"bp3-input"}
@@ -290,7 +274,8 @@ class InputContainer extends React.Component{
         />
       </div>
 
-
+      <br />
+      <b>Tax Variables</b>
       <div className="input-item">
         Deppreciate Over
         <NumberFormat
@@ -301,7 +286,7 @@ class InputContainer extends React.Component{
             const regex = /years/gi;
             val = val.replace(regex,'');
             val = parseFloat(val);
-            
+
             this.updateValues(val, 'depreciateOver', true);
           }}
           thousandSeparator={true}
@@ -327,6 +312,22 @@ class InputContainer extends React.Component{
           defaultValue = {0}
           fixedDecimalScale = {true}
           decimalScale = {0}
+        />
+      </div>
+
+      <div className="input-item">
+        Income Tax Rate %
+        <NumberFormat
+   	 			 className={"bp3-input"}
+          value = {this.state.model.incomeTaxRate}
+          onBlur = {(event) => {
+            this.updateValuesPercent(event, 'incomeTaxRate');
+          }}
+          thousandSeparator={true}
+          suffix={'%'}
+          defaultValue = {0}
+          fixedDecimalScale = {true}
+          decimalScale = {2}
         />
       </div>
 

@@ -14,8 +14,14 @@ var _ = require('lodash');
 class ProjectionTable extends React.Component{
   constructor(props){
     super(props);
+    // old years: [1,2,3,4,5,10,20,30]
+    var yearsArr = []
+    for (var i = 0; i <= 42; i++) {
+      yearsArr[i] = i;
+    }
+
     var defaultView = {
-      'years': [1,2,3,4,5,10,20,30],
+      'years': yearsArr,
       'yearsString': "1,2,3,4,5,10,20,30",
       'attributes': ['propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'paymentsAnnualized', 'cashFlow', 'depreciation', 'cashFlowIRS', 'valueOfRealEstateInvestment', 'valueOfStockMarketInvestment', 'remainingBalance',  'totalEquity', 'annualInterest']
     }

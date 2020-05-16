@@ -1,10 +1,3 @@
-/*
-Get stats/data from iex
-https://iexcloud.io/docs/api/#mortgage-rates
-
-*/
-
-
 import React from 'react';
 import { Icon } from "@blueprintjs/core";
 import './include/css/bootstrap.min.css';
@@ -16,6 +9,8 @@ import Metric from './Metric.js';
 import NumberFormat from 'react-number-format';
 import InputContainer from './InputContainer';
 import ProjectionTable from './ProjectionTable';
+import MetadataComponent from './MetadataComponent';
+
 import {Navbar, Nav} from 'react-bootstrap';
 
 var _ = require('lodash');
@@ -77,8 +72,7 @@ class App extends React.Component{
       },
 
       metadata: {
-        name: 'untitled model',
-        active: true
+        title: 'default name model'
       },
 
       computedArrays: {
@@ -107,7 +101,7 @@ class App extends React.Component{
         netOperatingExpenses: "Net Operating Expenses (M)",
         netOperatingIncome: "Net Operating Income (M)",
         paymentsAnnualized: "Mortgage Payment (M)",
-        cashFlow: "Cashflow (A)",
+        cashFlow: "Cashflow (M)",
         depreciation: "Depreciation (A)",
         cashFlowIRS: "Cash Flow IRS (A)",
         resultingTaxWriteoff: "Resulting Tax Writeoff (A)",
@@ -141,13 +135,6 @@ class App extends React.Component{
       });
     });
   };
-  // computeAllInitialValues = () => {
-  //   compute.asyncComputeInitial(this.state.model, this.state.computed, this.state.computedArrays, (error, computedResult) => {
-  //     this.setState({
-  //       computed: computedResult
-  //     });
-  //   });
-  // };
 
   updateModelState = (e, modelStateParameter) => {
     var valuesStoredInArrayZero = {
@@ -769,28 +756,6 @@ class App extends React.Component{
     );
   }.bind(this);
 
-  MetadataComponent = function(){
-    return(
-      <React.Fragment>
-        <h1>metadata component</h1>
-        <input type="text" value={this.state.model.name} onChange={(event) => {
-            const value = event.target.value;
-
-            this.setState((previousState) => {
-              previousState.model.name = value;
-              return({
-                model: previousState.model
-              })
-            });
-
-          }} />
-      </React.Fragment>
-
-    )
-  }.bind(this);
-
-  // update inputContainer values callback
-  // check if this is neccesary
   updateParametersCallback = function(value, param){
     var updateIndividualParameter = function(param){
       this.setState((previousState) => {
@@ -821,7 +786,16 @@ class App extends React.Component{
   }.bind(this);
 
   // updates parameter model
-  updateParameter = function(parameter, value){
+  updateParameter = function(parameter, value, isMetadataValue){
+    if(isMetadataValue){
+      this.setState((previousState)=>{
+        previousState.metadata[parameter] = value;
+        return({
+          model: previousState.model
+        });
+      });
+    }
+
     this.setState((previousState)=>{
       previousState.model[parameter] = value;
       return({
@@ -840,8 +814,14 @@ class App extends React.Component{
           </Nav>
         </Navbar>
 
-
         <section>
+          <MetadataComponent
+            updateParentParameter = {(parameter, value) => {
+              this.updateParameter(parameter, value, true);
+            }}
+            title = {this.state.metadata.title}
+            isUntitled = {false}
+          />
 
           <div className="app">
               <div className="app-row-1">
@@ -862,9 +842,16 @@ class App extends React.Component{
 
                 <ChartContainer
                   className = "chart-container"
+                  yearsOutComputation = {this.state.model.yearsOutComputation}
                   data={{
-                    'propertyValue': this.state.computedArrays.propertyValue,
-                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment
+                    'cumEquity': this.state.computedArrays.totalEquity,
+                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
+                    'cashFlow': this.state.computedArrays.cashFlow,
+                  }}
+                  amortization={{
+                    'cumEquity': this.state.computedArrays.totalEquity,
+                    'cumInterest': this.state.computedArrays.cumInterest,
+                    'cumPrincipal': this.state.computedArrays.cumPrincipal
                   }}
                 />
               </div>

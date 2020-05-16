@@ -3,6 +3,9 @@ import './include/css/bootstrap.min.css';
 import './include/css/universal.css';
 import './include/css/ChartContainer.css';
 import PropertyValueChart from './include/PropertyValueChart';
+import AreaChart from './AreaChart';
+import AmortizationChart from './AmortizationChart';
+
 import { Tab, Tabs } from "@blueprintjs/core";
 import * as d3 from "d3";
 
@@ -30,12 +33,7 @@ class ChartContainer extends React.Component{
     );
   }.bind(this);
 
-  AmortizationChart = function(){
-    return(
-      <React.Fragment>
-        <h6>Amortization Chart coming soon</h6>
-      </React.Fragment>
-    );
+  componentDidMount = function(){
   }
 
   handleChartDrawPostTabChange = function(){
@@ -62,13 +60,15 @@ class ChartContainer extends React.Component{
   //   return(width);
   // }
 
+
+    // OLD AMORT CHART<Tab id="amortization" title="Amortization" panel={<AmortizationChart props={this.props} />} />
+
   render() {
     return(
       <React.Fragment>
             <div className="chartc container-padding-margin-chart">
               <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
-                <Tab id="value" title="Value" panel={<this.ValueChart />} />
-                <Tab id="amortization" title="Amortization" panel={<this.AmortizationChart />} />
+                <Tab id="value" title="Value Projection" panel={<AreaChart props={this.props}/>} />
               </Tabs>
             </div>
 

@@ -121,15 +121,16 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
         });
       },
       generateEquityArray = function(callback){
-        //calculate total equity
-        //equity[year] = appreciatedValue - remainingBalance
-
         // at purchase equity = down payment
         computedArrays.totalEquity[0] = computedArrays.propertyValue[0] * model.downPaymentPct;
 
+        const downPaymentAmount = (computedArrays.propertyValue[0] * model.downPaymentPct);
+
+        // principal (down pmt) + appreciation ONLY + loan cumPrincipal
         for (var year = 1; year <= model.yearsOutComputation; year++) {
-          computedArrays.totalEquity[year] = computedArrays.propertyValue[year] - computedArrays.remainingBalance[year];
+          computedArrays.totalEquity[year] = downPaymentAmount + (computedArrays.propertyValue[year] - computedArrays.propertyValue[0]) + (computedArrays.propertyValue[0] - computedArrays.remainingBalance[year] - downPaymentAmount);
         }
+
         callback(null);
       },
       generateCashflowArray = function(callback){
@@ -164,7 +165,7 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
         var cumCashflow = 0;
         for (var year = 0; year <= model.yearsOutComputation; year++) {
           cumCashflow += computedArrays.cashFlow[year];
-          computedArrays.valueOfRealEstateInvestment[year] = computedArrays.totalEquity[year] = cumCashflow;
+          computedArrays.valueOfRealEstateInvestment[year] = computedArrays.totalEquity[year] + cumCashflow;
         }
         callback(null);
       },
