@@ -11,7 +11,6 @@ import * as d3 from "d3";
 
 /*
 Promising: https://www.chartjs.org/samples/latest/charts/area/line-stacked.html
-
 */
 
 class ChartContainer extends React.Component{
@@ -67,9 +66,8 @@ class ChartContainer extends React.Component{
     return(
       <React.Fragment>
             <div className="chartc container-padding-margin-chart">
-              <Tabs animate="true" large={true} id="TabsExample" onChange={this.handleTabChange} selectedTabId={this.state.currentView}>
-                <Tab id="value" title="Value Projection" panel={<AreaChart props={this.props}/>} />
-              </Tabs>
+                <h3>Value Projection</h3>
+                <AreaChart props={this.props} />
             </div>
 
       </React.Fragment>

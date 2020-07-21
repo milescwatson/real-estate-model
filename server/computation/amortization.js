@@ -95,8 +95,9 @@ exports.returnAmortizationObject = function(request, response){
     },
     function(callback){
       // cumulative interest at end of year
-      amortization.annualInterest.push(0);
-      for (var year = 1; year < requestObject.yearsOutComputation; year++) {
+      amortization.annualInterest[0] = 0;
+
+      for (var year = 1; year <= requestObject.yearsOutComputation; year++) {
         if(year <= requestObject.loanLengthYears){
           var startPeriod = ((year*12 - 12) === 0) ? 1 : (year*12 - 12),
               endPeriod = (year*12);

@@ -68,7 +68,7 @@ exports.asyncComputeArraysIncomeStatement = function(model, computedArrays, call
         // _.each(computedArrays.grossRentalIncome, (value, key) => {
         //   computedArrays.netOperatingIncome[key] = value - computedArrays.netOperatingExpenses[key];
         // });
-        for (var year = 0; year < model.yearsOutComputation; year++) {
+        for (var year = 0; year <= model.yearsOutComputation; year++) {
           computedArrays.netOperatingIncome[year] = (computedArrays.grossRentalIncome[year] - computedArrays.netOperatingExpenses[year]);
         }
 

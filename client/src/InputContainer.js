@@ -274,8 +274,10 @@ class InputContainer extends React.Component{
         />
       </div>
 
-      <br />
+      <div className="input-item">
       <b>Tax Variables</b>
+      </div>
+
       <div className="input-item">
         Deppreciate Over
         <NumberFormat

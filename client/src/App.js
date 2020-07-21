@@ -11,118 +11,160 @@ import InputContainer from './InputContainer';
 import ProjectionTable from './ProjectionTable';
 import MetadataComponent from './MetadataComponent';
 
-import {Navbar, Nav} from 'react-bootstrap';
-
 var _ = require('lodash');
 
 var isIconSize = 22;
+var templateModel = {
+  model : {
+    rentYRG: 0.02,
+    appreciationYRG: 0.015,
+    units: {
+      1: {
+        name: 'Unit 1',
+        rentPerMonth: 2200.00,
+      }
+    },
+    expenses: {
+      1: {
+        name: 'Insurance',
+        amount: 100,
+        amountYearly: 1200.00,
+        yrg: .02
+      },
+      2: {
+        name: 'Property Tax',
+        amount: 180.00,
+        amountYearly: 2160.00,
+        yrg: .02
+      }
+    },
+    stockYRG: 0.06,
+    vaccancyPct: 0.05,
+    downPaymentPct: 0.2,
+    interestRatePct: 0.03,
+    loanStartingDate: null,
+    valueOfLand: 40000,
+    propertyManagerPercentageOfGrossRent: 0.05,
+    incomeTaxRate: 0.3,
+    yearsOutComputation: 35,
+    loanLengthYears: 30,
+    depreciateOver: 25,
+    maxWriteoffPerYear: 15000
+  },
+  // used to store the state of input components - these values are re-computed as decimal percents and stored in the main model
+  visualModel: {
+    stockYRG: null,
+    vaccancyPct: null,
+    downPaymentPct: null,
+    interestRatePct: null,
+    propertyManagerPercentageOfGrossRent: null,
+    incomeTaxRate: null
+  },
+
+  view: {
+    unitRows: []
+  },
+
+  metadata: {
+    title: 'template model #1',
+    isSaved: false
+  },
+
+  computedArrays: {
+    propertyValue: [200000],
+    grossRentalIncome: [], // total rents less vaccancy - put the initial value in [1]
+    netOperatingExpenses: [],
+    netOperatingIncome: [],
+    cashFlow: [],
+    depreciation: [],
+    cashFlowIRS: [],
+    resultingTaxWriteoff: [],
+    valueOfRealEstateInvestment: [],
+    valueOfRealEstateInvestmentIncludingWriteoffs: [],
+    valueOfStockMarketInvestment: [],
+    remainingBalance: [],
+    totalEquity: [],
+    annualInterest: [],
+    cumPrincipal: [],
+    cumInterest: [],
+    paymentsAnnualized: []
+  },
+
+  nameMappings: {
+    propertyValue: "Property Value",
+    grossRentalIncome: "Gross Rental Income (M)",
+    netOperatingExpenses: "Net Operating Expenses (M)",
+    netOperatingIncome: "Net Operating Income (M)",
+    paymentsAnnualized: "Mortgage Payment (M)",
+    cashFlow: "Cashflow (M)",
+    depreciation: "Depreciation (A)",
+    cashFlowIRS: "Cash Flow IRS (A)",
+    resultingTaxWriteoff: "Resulting Tax Writeoff (A)",
+    valueOfRealEstateInvestment: "Value of Real Estate Investment",
+    valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
+    valueOfStockMarketInvestment: "Value of Stock Market Investment",
+    remainingBalance: "Loan Balance Remaining",
+    totalEquity: "Total Equity",
+    annualInterest: "Annual Interest",
+    cumPrincipal: "Cumulative Principal",
+    cumInterest: "Cumulative Interest"
+  }
+}
 
 class App extends React.Component{
   constructor(props){
     super(props);
-    this.initialState = {
-      model : {
-        rentYRG: 0.02,
-        appreciationYRG: 0.015,
-        units: {
-          1: {
-            name: 'Unit 1',
-            rentPerMonth: 2200.00,
-          }
-        },
-        expenses: {
-          1: {
-            name: 'Insurance',
-            amount: 100,
-            amountYearly: 1200.00,
-            yrg: .02
-          },
-          2: {
-            name: 'Property Tax',
-            amount: 180.00,
-            amountYearly: 2160.00,
-            yrg: .02
-          }
-        },
-        stockYRG: 0.06,
-        vaccancyPct: 0.05,
-        downPaymentPct: 0.2,
-        interestRatePct: 0.03,
-        loanStartingDate: null,
-        valueOfLand: 40000,
-        propertyManagerPercentageOfGrossRent: 0.05,
-        incomeTaxRate: 0.3,
-        yearsOutComputation: 35,
-        loanLengthYears: 30,
-        depreciateOver: 25,
-        maxWriteoffPerYear: 15000
-      },
-      // used to store the state of input components - these values are re-computed as decimal percents and stored in the main model
-      visualModel: {
-        stockYRG: null,
-        vaccancyPct: null,
-        downPaymentPct: null,
-        interestRatePct: null,
-        propertyManagerPercentageOfGrossRent: null,
-        incomeTaxRate: null
-      },
-
-      view: {
-        unitRows: []
-      },
-
-      metadata: {
-        title: 'default name model'
-      },
-
-      computedArrays: {
-        propertyValue: [200000],
-        grossRentalIncome: [], // total rents less vaccancy - put the initial value in [1]
-        netOperatingExpenses: [],
-        netOperatingIncome: [],
-        cashFlow: [],
-        depreciation: [],
-        cashFlowIRS: [],
-        resultingTaxWriteoff: [],
-        valueOfRealEstateInvestment: [],
-        valueOfRealEstateInvestmentIncludingWriteoffs: [],
-        valueOfStockMarketInvestment: [],
-        remainingBalance: [],
-        totalEquity: [],
-        annualInterest: [],
-        cumPrincipal: [],
-        cumInterest: [],
-        paymentsAnnualized: []
-      },
-
-      nameMappings: {
-        propertyValue: "Property Value",
-        grossRentalIncome: "Gross Rental Income (M)",
-        netOperatingExpenses: "Net Operating Expenses (M)",
-        netOperatingIncome: "Net Operating Income (M)",
-        paymentsAnnualized: "Mortgage Payment (M)",
-        cashFlow: "Cashflow (M)",
-        depreciation: "Depreciation (A)",
-        cashFlowIRS: "Cash Flow IRS (A)",
-        resultingTaxWriteoff: "Resulting Tax Writeoff (A)",
-        valueOfRealEstateInvestment: "Value of Real Estate Investment",
-        valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
-        valueOfStockMarketInvestment: "Value of Stock Market Investment",
-        remainingBalance: "Loan Balance Remaining",
-        totalEquity: "Total Equity",
-        annualInterest: "Annual Interest",
-        cumPrincipal: "Cumulative Principal",
-        cumInterest: "Cumulative Interest"
-      }
-      // userViews: {
-      //   defaultView: ['year', 'propertyValue', 'netOperatingIncome', 'netOperatingExpenses', 'cashFlow'],
-      //   all: ['year', 'propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow', 'depreciation', 'cashFlowIRS', 'resultingTaxWriteoff', 'valueOfRealEstateInvestment', 'valueOfRealEstateInvestmentIncludingWriteoffs', 'remainingBalance', 'totalEquity', 'cumPrincipal', 'cumInterest', 'annualInterest', 'paymentsAnnualized', 'valueOfStockMarketInvestment'],
-      //   operatingView: ['year', 'propertyValue', 'netOperatingExpenses', 'netOperatingIncome', 'cashFlow'],
-      //   selectedView: 'all'
-      // }
-    }
-    this.state = this.initialState;
+    this.state = templateModel;
   };
+
+  syncDown = function(callback){
+    const userHash = this.props.userHash;
+    const toSend = {
+      userIDHash: userHash,
+      modelID: this.props.modelID
+    }
+
+    fetch('/get-user-data-single', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(toSend),
+    })
+    .then(response => response.json())
+    .then((serverObject) => {
+      var newModel = JSON.parse(serverObject.model);
+      newModel.metadata.id = parseInt(serverObject.id);
+      newModel.metadata.createdDateTime = serverObject.createdDateTime;
+      callback(JSON.parse(serverObject.model))
+    })
+  }
+
+  syncUp = function(){
+    // syncs up a single model
+    const userHash = this.props.userHash;
+    const toSend = {
+      userIDHash: userHash,
+      modelID: this.props.modelID,
+      modelJSON: this.state
+    }
+
+    fetch('/edit-model', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(toSend),
+    })
+    .then(response => response.json())
+    .then((serverResponse) => {
+      // var newModel = JSON.parse(serverObject.model);
+      // newModel.metadata.id = parseInt(serverObject.id);
+      // newModel.metadata.createdDateTime = serverObject.createdDateTime;
+      // callback(JSON.parse(serverObject.model))
+      console.log('serverResponse = ', serverResponse);
+    })
+  }
 
   financialNum = function(x){
     return Number.parseFloat(x).toFixed(2);
@@ -132,6 +174,16 @@ class App extends React.Component{
     compute.asyncComputeArraysIncomeStatement(this.state.model, this.state.computedArrays, (error, result) => {
       this.setState({
         computedArrays: result
+      }, () => {
+        // sync-related tasks
+        var summaryData = {
+          capRate: ((Math.round((this.state.computedArrays.netOperatingIncome[0]*12 / this.state.computedArrays.propertyValue[0]) * 100))+'%'),
+          grm: (this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)),
+          cashOnCashReturn: (((this.state.computedArrays.cashFlow[0] * 12) + (this.state.computedArrays.valueOfRealEstateInvestment[1] - this.state.computedArrays.valueOfRealEstateInvestment[0])  ) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)),
+          fyCashflow: (this.state.computedArrays.cashFlow[0] * 12)
+        }
+        this.props.getSummaryDataCallback(summaryData);
+        this.syncUp();
       });
     });
   };
@@ -161,8 +213,18 @@ class App extends React.Component{
   };
 
   componentDidMount = function(){
-    this.computeEverything();
+    this.syncDown((modelState) => {
+      this.setState((workingState)=>{
+        workingState = modelState;
+        return(workingState);
+      }, ()=> {
+        this.computeEverything();
+      })
+    })
   };
+
+  componentDidUpdate = function(prevProps, prevState, snapshot){
+  }
 
   computeEverything = function(){
     this.computeAllCompoundInterestArrays();
@@ -480,10 +542,17 @@ class App extends React.Component{
     }.bind(this);
     sumRents();
 
+    var incomeStatementTitleStyle = {
+      display: 'inline'
+    }
+
     return(
       <React.Fragment>
         <div className="is-container container-padding-margin">
-        <h3>Income Statement</h3>
+        <Icon icon={'dollar'} intent="primary" iconSize={24} />
+
+        <h3 style={incomeStatementTitleStyle}>  Income Statement</h3>
+
         <table className="is-table">
           <tbody>
           <tr className="income-statement-header">
@@ -807,14 +876,7 @@ class App extends React.Component{
   render(){
     return(
       <React.Fragment>
-
-        <Navbar bg="light" variant="light">
-          <Navbar.Brand href="">Real Estate Model</Navbar.Brand>
-          <Nav className="mr-auto">
-          </Nav>
-        </Navbar>
-
-        <section>
+        <section id="app-sections">
           <MetadataComponent
             updateParentParameter = {(parameter, value) => {
               this.updateParameter(parameter, value, true);
@@ -822,9 +884,9 @@ class App extends React.Component{
             title = {this.state.metadata.title}
             isUntitled = {false}
           />
-
           <div className="app">
               <div className="app-row-1">
+
                 <br />
                 <InputContainer
                   className = "input-container container-padding-margin"
@@ -924,11 +986,11 @@ class App extends React.Component{
             <ProjectionTable
               computedArrays={this.state.computedArrays}
               nameMappings = {this.state.nameMappings}
+              yearsOutComputation = {this.state.model.yearsOutComputation}
             />
           </div>
 
         </section>
-
       </React.Fragment>
     )
   }

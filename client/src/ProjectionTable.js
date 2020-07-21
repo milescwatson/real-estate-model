@@ -4,25 +4,24 @@ import './include/css/projectionTable.css';
 import './include/css/bootstrap.min.css';
 import NumberFormat from 'react-number-format';
 import { Form, Card } from 'react-bootstrap';
+import { Icon } from "@blueprintjs/core";
 
 var _ = require('lodash');
 
 // TODO: Validate year input if higher than
 // TODO: Pass preferences back to app with callback
 // TODO: Year input use correct input labeling, make less wide
+// TODO: Cleanup year string input to remove unnecesary spaces, which lead to incorrect cashflow styling
 
 class ProjectionTable extends React.Component{
   constructor(props){
     super(props);
-    // old years: [1,2,3,4,5,10,20,30]
     var yearsArr = []
-    for (var i = 0; i <= 42; i++) {
-      yearsArr[i] = i;
-    }
+    // old years: 1,2,3,4,5,10,20,30
 
     var defaultView = {
       'years': yearsArr,
-      'yearsString': "1,2,3,4,5,10,20,30",
+      'yearsString': "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35",
       'attributes': ['propertyValue', 'grossRentalIncome', 'netOperatingExpenses', 'netOperatingIncome', 'paymentsAnnualized', 'cashFlow', 'depreciation', 'cashFlowIRS', 'valueOfRealEstateInvestment', 'valueOfStockMarketInvestment', 'remainingBalance',  'totalEquity', 'annualInterest']
     }
 
@@ -30,8 +29,11 @@ class ProjectionTable extends React.Component{
       selectedViews: [defaultView],
       rowsAsYears: true
     };
-
     this.state = initialState;
+  }
+
+  componentDidMount = function(){
+    this.yearStringtoArray();
   }
 
   yearStringtoArray = function(){
@@ -44,14 +46,14 @@ class ProjectionTable extends React.Component{
           if (isNaN(years[i])) {
             isValid = false;
           }
-          if (years[i] > 300) {
-            // can't be greater than n years
+          if (years[i] > this.props.yearsOutComputation) {
+            // can't be greater than yearsOutComputation years
             isValid = false;
           }
         }
         return isValid
       }
-    };
+    }.bind(this);
 
     if (isValidYears(this.state.selectedViews[0].yearsString) && (this.state.selectedViews[0].yearsString.length) > 0) {
       var yearArray = this.state.selectedViews[0].yearsString.split(',');
@@ -109,14 +111,13 @@ class ProjectionTable extends React.Component{
       }
 
       for (var col = 0; col < this.state.selectedViews[0].attributes.length; col++) {
-
         var iAttr = this.state.selectedViews[0].attributes[col];
         // console.log('attr, row', iAttr, row);
         // console.log(this.props.computedArrays[iAttr][row]);
         var tdStyle = {};
 
         if(iAttr === 'cashFlow'){
-          if(this.props.computedArrays[iAttr][(this.state.selectedViews[0]['years'][row])] > 0){
+          if(this.props.computedArrays[iAttr][(this.state.selectedViews[0]['years'][row])] >= 0){
             tdStyle = {
               'backgroundColor': 'lightgreen'
             }
@@ -240,8 +241,6 @@ class ProjectionTable extends React.Component{
 
   Years = function(){
     var validationClassname = "";
-    // validationClassname = isValidYears(this.state.selectedViews[0].yearString) ? "" : "bp3-intent-danger"
-
     return(
       <React.Fragment>
         <div className={"bp3-input-group " + validationClassname + ' years-input'}>
@@ -262,7 +261,8 @@ class ProjectionTable extends React.Component{
   render() {
     return(
       <React.Fragment>
-          <h3>Financial Projections</h3>
+          <Icon icon={'list-columns'} intent="primary" iconSize={22} />
+          <h3>  Financial Projections</h3>
           <this.Settings />
           <this.GenerateTable />
       </React.Fragment>

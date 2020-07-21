@@ -1,0 +1,22 @@
+.model-item {
+  border: 1px solid gray;
+  padding: 2px;
+}
+
+#model-and-delete {
+  width: 100%
+}
+
+#app-title {
+  text-align: center
+}
+
+
+.savedmodels-header-container {
+  display: flex;
+}
+
+.welcome-text{
+  margin-left: 50%;
+  padding-top: 15%
+}

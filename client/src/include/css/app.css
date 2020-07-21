@@ -67,13 +67,6 @@
 section {
 }
 
-.sidebar {
-  flex: 2;
-  margin-left: 0px;
-  margin-right: 10px;
-  border: 1px solid gray;
-}
-
 /* maps to a prop-passed class to a div in input-container  */
 .app-row-1 {
   flex: 10;

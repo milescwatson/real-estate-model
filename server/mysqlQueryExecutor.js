@@ -22,9 +22,9 @@ var mysql = require('mysql2'),
                 if (!connection.tzConfigured) {
                     connection.tzConfigured = true;
                 }
-                connection.query(query.sql, query.values, function (error, result) {
+                connection.query(query.sql, query.values, function (error, results) {
                     if (!error) {
-                        callback(null, result);
+                        callback(null, results);
                     } else {
                         console.log("executeQuery error: ", error);
                         callback(error);
@@ -40,3 +40,7 @@ exports.executeCallableStatement = function (storedProcedure, callback) {
         callback(error, results);
     });
 };
+
+exports.query = function(query, callback) {
+  executeQuery(query, callback);
+}

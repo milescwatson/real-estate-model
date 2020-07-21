@@ -1,5 +1,8 @@
 #titlebar {
-  display: inline;
+  width: 60%;
+}
+
+#model-description {
   width: 60%;
 }
 

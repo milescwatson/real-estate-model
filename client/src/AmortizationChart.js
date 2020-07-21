@@ -31,7 +31,7 @@ var createChart = function(update){
                   ticks: {
                     callback: function(value, index, values){
                       return '$' + value.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-                    }.bind(this)
+                    }
                   }
               }]
           }
@@ -40,9 +40,9 @@ var createChart = function(update){
 }
 
 class AmortizationChart extends React.Component{
-  constructor(props){
-    super(props);
-  }
+  // constructor(props){
+  //   super(props);
+  // }
 
   bigNumberString = function(number, maxNumberToDisplay){
     var sign = 0;

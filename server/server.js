@@ -11,6 +11,8 @@ var express = require('express'),
     LocalStrategy = require('passport-local').Strategy,
     authentication = require('./authenticate'),
     amortization = require('./computation/amortization'),
+    mysql = require('./mysqlQueryExecutor'),
+    model = require('./models/modelServerActions.js'),
     port = 3001;
 
 app.use(bodyParser.json());
@@ -29,20 +31,26 @@ app.post('/login',
                                    failureFlash: true })
 );
 
-app.get('/logout', authentication.logout);
-
-app.get('/login-status', authentication.loginStatus);
-
 app.post('/create-user', authentication.createUser);
+
+
+// Model
+app.post('/create-model', model.createModel)
+app.post('/edit-model', model.editModel)
+app.post('/delete-model', model.deleteModel);
+app.post('/get-identifier', model.getIdentifier);
+app.post('/get-user-data', model.getUserData);
+app.post('/get-user-data-single', model.getUserDataSingle);
+app.post('/get-summary-data', model.getSummaryData);
+
+//TODO: Handle update of entire model, if a single model edit request did not go through
+app.post('/amortization-object', amortization.returnAmortizationObject);
+app.use('/r-model',express.static(__dirname + '/frontend-build'));
 
 app.get('/health', function(request, response, next) {
 	  response.send('{"status": "healthy"}');
 });
 
-app.post('/amortization-object', amortization.returnAmortizationObject);
-
-app.use('/r-model',express.static(__dirname + '/frontend-build'));
-
 app.listen(port, function() {
-  console.log(`listening on port ${port}!`);
+  console.log(`Real Estate Model server running on port ${port}!`);
 });

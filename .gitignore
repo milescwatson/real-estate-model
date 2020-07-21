@@ -1,5 +1,6 @@
 /server/npm_modules
 /server/frontend-build
+/server/node_modules
 /client/npm_modules
 
 # dependencies

@@ -8,25 +8,7 @@ var Chart = require('chart.js');
 
 var areaChart;
 
-/*
-all layers, bottom up:
-totalEquity
-cashflow
-value of mortgage interest
-value of tax writeoff
-
-*/
-
 var createChart = function(update){
-  var chartColors = {
-    red: 'rgb(255, 99, 132)',
-    orange: 'rgb(255, 159, 64)',
-    yellow: 'rgb(255, 205, 86)',
-    green: 'rgb(75, 192, 192)',
-    blue: 'rgb(54, 162, 235)',
-    purple: 'rgb(153, 102, 255)',
-    grey: 'rgb(231,233,237)'
-  };
 
   var ctx = document.getElementById('chart-canvas');
   const dcf = [];
@@ -35,14 +17,25 @@ var createChart = function(update){
       data: dcf,
       options: {
           tooltips: {
+            callbacks: {
+              label: function(tooltipItem, data){
+                var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                if (label) {
+                    label += ': ';
+                }
+                var finFormat = '$' + Number(parseInt(tooltipItem.yLabel)).toLocaleString('en-US', { style: 'decimal', currency: 'USD' });
+                // TODO: add a total real estate value field in tooltip
+                return (label + finFormat);
+              },
+              beforeTitle: function(){
+                return('Year: ')
+              }
+            },
             mode: 'x-axis',
             intersect: 'false',
             position: 'average',
-            callbacks: {
-              labels: function(){
-                return('swagg label')
-              }
-            }
+            bodyFontSize: 15,
+            titleFontSize: 18
           },
           plugins: {
               colorschemes: {
@@ -57,18 +50,16 @@ var createChart = function(update){
                   ticks: {
                     callback: function(value, index, values){
                       return '$' + value.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-                    }.bind(this)
+                    }
                   }
               }]
           }
       }
   });
+  areaChart.isInitialized = false;
 }
 
 class AreaChart extends React.Component{
-  constructor(props){
-    super(props);
-  }
 
   bigNumberString = function(number, maxNumberToDisplay){
     var sign = 0;
@@ -104,6 +95,7 @@ class AreaChart extends React.Component{
 
   componentDidMount = function(){
     createChart();
+    this.generateChartData();
   }
 
   shouldComponentUpdate = function(nextProps, nextState){
@@ -114,8 +106,23 @@ class AreaChart extends React.Component{
     }
   }
 
+  componentDidUpdate = function(nextProps){
+    this.generateChartData();
+  }
+
+  handleUpdateChartData = function(newChartData){
+    _.each(areaChart.data.datasets, (dataset, key) => {
+      if(!(JSON.stringify(dataset.data) === newChartData[key].data )) {
+        // if current chart data NOT equal to newChartData
+        // arrayKeysDescriptive.push(dataset.keyName);
+        areaChart.data.datasets[key].data = newChartData[key].data
+      }
+
+    });
+    areaChart.update();
+  }
+
   generateChartData = function(){
-    console.log('generateChartData ran');
     var nameMapping = {
       'stockMarketValue': 'Stock Market Value',
       'propertyValue': 'Property Value',
@@ -129,106 +136,63 @@ class AreaChart extends React.Component{
         }else{
           return(key);
         }
-    },
-    colorMapping = {
-      'stockMarketValue': {color:'red',borderColor:'black'},
-      'totalEquity': {color:'rgb(102, 204, 255)',borderColor:'black'},
-      'cashFlow': {color:'green',borderColor:'black'}
-    },
-    mapColor = function(key){
-      if(Object.keys(colorMapping).includes(key)){
-        return(colorMapping[key].color);
-      }else {
-        return('yellow');
-      }
-    },
-    mapBorder = function(key){
-      if(Object.keys(colorMapping).includes(key)){
-        return(colorMapping[key].borderColor);
-      }else {
-        return('yellow');
-      }
     };
+    
+    var chartDataFinal = [];
+    _.each(this.props.props.data, (currentArray, key) => {
+      var obj = {}
+      obj.label = mapName(key);
+      obj.keyName = key;
 
-    var generateDataArray = function(){
-      var dataRet = [];
-
-      _.each(this.props.props.data, (currentArray, key) => {
-        var obj = {}
-        obj.label = mapName(key);
-
-        // obj.backgroundColor = mapColor(key);
-        // obj.borderColor = mapBorder(key);
-
-        if(key === 'cashFlow'){
-          var cumCashflow = 0;
-          var cumCashflowArray = [];
-          for (var year = 0; year <= this.props.props.yearsOutComputation; year++) {
-            cumCashflow += currentArray[year];
-            cumCashflowArray[year] = cumCashflow;
-          }
-          obj.data = cumCashflowArray;
-        } else {
-          obj.data = currentArray;
+      if(key === 'cashFlow'){
+        var cumCashflow = 0;
+        var cumCashflowArray = [];
+        for (var year = 0; year <= this.props.props.yearsOutComputation; year++) {
+          cumCashflow += currentArray[year];
+          cumCashflowArray[year] = cumCashflow;
         }
+        obj.data = cumCashflowArray;
+      } else {
+        obj.data = currentArray;
+      }
 
-        if(key === 'totalEquity'){
-          obj.order = 1;
-        }
+      if(key === 'totalEquity'){
+        obj.order = 1;
+      }
 
-        //
-        // if(key === 'cashFlow'){
-        //   obj.order = 2;
-        // }
+      if(key === 'stockMarketValue'){
+        obj.fill = false;
+      }
 
-        if(key === 'stockMarketValue'){
-          // obj.order = 1;
-          obj.fill = false;
-        }
-
-        dataRet.push(obj);
-      })
-      return dataRet;
-
-    }.bind(this);
+      chartDataFinal.push(obj);
+    })
 
     var xLabels = []
     for (var i = 0; i <= this.props.props.yearsOutComputation; i++) {
       xLabels[i] = i;
     }
 
-    var chartDataFinal = generateDataArray();
     const obj = {
       labels: xLabels,
       datasets: chartDataFinal
     }
-    // updateChartData(obj);
-    areaChart.data = obj;
-    areaChart.update();
-  }
 
-  componentDidUpdate = function(){
-    this.generateChartData();
+    // if the chart is already initialized with first data, we need to update its data, not replace it
+    if (!areaChart.isInitialized){
+      areaChart.data = obj;
+      areaChart.update();
+      areaChart.isInitialized = true;
+    } else {
+      // call a function that compares current chart data with new props, and changes values with precision
+      this.handleUpdateChartData(chartDataFinal)
+    }
+
   }
 
   render(){
     return(
       <React.Fragment>
         <canvas id='chart-canvas' ref={(element) => {this.canvasRef = element}}></canvas>
-        <button onClick={() => {
-          // this.state.acref.update();
-          this.generateChartData()
-        }}>
-        generateChartData
-        </button>
-        <br />
-        <button onClick={() => {
-            // this.state.acref.update();
-            createChart();
-          }}>
-          createChart
-        </button>
-
       </React.Fragment>
     )
   }

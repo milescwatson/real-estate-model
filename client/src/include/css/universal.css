@@ -1,27 +1,60 @@
-/* .any-container {
-  padding: 5px;
-  width: 96%;
-  border: 1px solid green;
-  margin-top:1%;
-  margin-bottom: 1%;
-  margin-left: auto;
-  margin-right: auto;
-} */
 
+h3 {
+  display: inline;
+}
 .container-padding-margin {
-  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  /* box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12); */
+  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.12);
+  border: 1px solid #8080801f;
+
   padding: 0.5%;
   margin: 10px;
 }
+.container-padding {
+  /* box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12); */
+  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.12);
+  border: 1px solid #8080801f;
+
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 0.5%;
+}
+
+.container {
+  /* box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12); */
+  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.12);
+  border: 1px solid #8080801f;
+
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 
 .container-padding-margin-chart {
-  box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  /* box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12); */
+  box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.12);
+  border: 1px solid #8080801f;
   padding: 1%;
   margin: 10px 0px 10px 1px;
 }
 
 body {
   font-family: 'Roboto', sans-serif;
+}
+
+#app-sections {
+  width: 80%;
+  float:right;
+}
+.sidebar {
+  width: 20%;
+  height: calc(100vh);
+  float: left;
+  margin-top:0px;
+  position: fixed;
+}
+
+.hyperlink {
+  cursor: pointer;
 }
 
 @import "~normalize.css";

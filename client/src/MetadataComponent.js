@@ -1,45 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './include/css/MetadataComponent.css'
 import './include/css/bootstrap.min.css';
 import './include/css/universal.css';
-
-import {Form} from 'react-bootstrap';
+// import { Icon } from "@blueprintjs/core";
+// import {Form} from 'react-bootstrap';
 
 function MetadataComponent(props) {
   const [state, setState] = useState({
     title:'',
-    editMode: ''
   });
 
-  var updateMetadata = function(){
-    if(props.isUntitled){
-      var workingState = {...state};
-      workingState.title = "Untitled Model";
-      setState(workingState);
-    }else {
-      var workingState = {...state};
-      workingState.title = props.title;
-      setState(workingState);
-    }
+  // var updateMetadata = function(){
+  //   var workingState = {...state};
+  //   workingState.title = props.title;
+  //   setState(workingState);
+  // }
+
+  var updateTitle = function(newTitle){
+    props.updateParentParameter('title', newTitle)
+    setState({title: newTitle})
   }
 
-  useEffect(() => {
-    updateMetadata();
-  },[])
+  // var updateParent = function(parameter){
+  //   console.log('safd');
+  // }
+
+  // useEffect(() => {
+  //   updateMetadata();
+  // },[])
 
   return(
     <React.Fragment>
       <div className="container-padding-margin">
-          <b>Model Title: </b>
-          {(props.isUntitled || state.editMode) ? <input value= {state.title} className="form-control" id="titlebar" placeholder = "Enter a title..." /> : <div id="title-as-heading-container" onClick={() => {setState({editMode: !state.editMode});
-        }}><h6 id="title-as-heading">{state.title}</h6></div>}
-        <br />
-        <label for="notes">Notes</label>
-        <input id="notes">
-        </input>
+
+        <div class="form-group">
+          <label for="titlebar">Model Title:  </label>
+          <input value= {state.title} className="form-control" id="titlebar" placeholder = "Enter a title..." onChange={(event) => {updateTitle(event.target.value)}}/>
+        </div>
+
+
       </div>
     </React.Fragment>
   )
 }
 
 export default MetadataComponent;
+// <div class="form-group">
+//   <label for="model-description">Description</label>
+//   <textarea class="form-control" id="model-description" rows="3"></textarea>
+// </div>
