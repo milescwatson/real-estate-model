@@ -1,15 +1,16 @@
 #titlebar {
-  width: 60%;
+  display: inline;
+  width: 30%;
 }
 
-#model-description {
+/* #model-description {
   width: 60%;
-}
+} */
 
-#title-as-heading-container {
+/* #title-as-heading-container {
   display:inline;
 }
 
 #title-as-heading {
   display:inline;
-}
+} */

@@ -1,3 +1,8 @@
+/*
+Add an "add to my models" button, if user is not the owner
+Fix undefined model error
+*/
+
 import React from 'react';
 import { Icon } from "@blueprintjs/core";
 import './include/css/bootstrap.min.css';
@@ -10,118 +15,54 @@ import NumberFormat from 'react-number-format';
 import InputContainer from './InputContainer';
 import ProjectionTable from './ProjectionTable';
 import MetadataComponent from './MetadataComponent';
+import Spinner from 'react-bootstrap/Spinner'
 
 var _ = require('lodash');
+var nameMappings = require('./include/nameMappings.js');
 
 var isIconSize = 22;
-var templateModel = {
-  model : {
-    rentYRG: 0.02,
-    appreciationYRG: 0.015,
-    units: {
-      1: {
-        name: 'Unit 1',
-        rentPerMonth: 2200.00,
-      }
-    },
-    expenses: {
-      1: {
-        name: 'Insurance',
-        amount: 100,
-        amountYearly: 1200.00,
-        yrg: .02
-      },
-      2: {
-        name: 'Property Tax',
-        amount: 180.00,
-        amountYearly: 2160.00,
-        yrg: .02
-      }
-    },
-    stockYRG: 0.06,
-    vaccancyPct: 0.05,
-    downPaymentPct: 0.2,
-    interestRatePct: 0.03,
-    loanStartingDate: null,
-    valueOfLand: 40000,
-    propertyManagerPercentageOfGrossRent: 0.05,
-    incomeTaxRate: 0.3,
-    yearsOutComputation: 35,
-    loanLengthYears: 30,
-    depreciateOver: 25,
-    maxWriteoffPerYear: 15000
-  },
-  // used to store the state of input components - these values are re-computed as decimal percents and stored in the main model
-  visualModel: {
-    stockYRG: null,
-    vaccancyPct: null,
-    downPaymentPct: null,
-    interestRatePct: null,
-    propertyManagerPercentageOfGrossRent: null,
-    incomeTaxRate: null
-  },
-
-  view: {
-    unitRows: []
-  },
-
-  metadata: {
-    title: 'template model #1',
-    isSaved: false
-  },
-
-  computedArrays: {
-    propertyValue: [200000],
-    grossRentalIncome: [], // total rents less vaccancy - put the initial value in [1]
-    netOperatingExpenses: [],
-    netOperatingIncome: [],
-    cashFlow: [],
-    depreciation: [],
-    cashFlowIRS: [],
-    resultingTaxWriteoff: [],
-    valueOfRealEstateInvestment: [],
-    valueOfRealEstateInvestmentIncludingWriteoffs: [],
-    valueOfStockMarketInvestment: [],
-    remainingBalance: [],
-    totalEquity: [],
-    annualInterest: [],
-    cumPrincipal: [],
-    cumInterest: [],
-    paymentsAnnualized: []
-  },
-
-  nameMappings: {
-    propertyValue: "Property Value",
-    grossRentalIncome: "Gross Rental Income (M)",
-    netOperatingExpenses: "Net Operating Expenses (M)",
-    netOperatingIncome: "Net Operating Income (M)",
-    paymentsAnnualized: "Mortgage Payment (M)",
-    cashFlow: "Cashflow (M)",
-    depreciation: "Depreciation (A)",
-    cashFlowIRS: "Cash Flow IRS (A)",
-    resultingTaxWriteoff: "Resulting Tax Writeoff (A)",
-    valueOfRealEstateInvestment: "Value of Real Estate Investment",
-    valueOfRealEstateInvestmentIncludingWriteoffs: "Value of Real Estate Investment Incl. Writeoffs",
-    valueOfStockMarketInvestment: "Value of Stock Market Investment",
-    remainingBalance: "Loan Balance Remaining",
-    totalEquity: "Total Equity",
-    annualInterest: "Annual Interest",
-    cumPrincipal: "Cumulative Principal",
-    cumInterest: "Cumulative Interest"
-  }
-}
 
 class App extends React.Component{
   constructor(props){
     super(props);
-    this.state = templateModel;
+    this.state = {
+      _isLoaded: false,
+      _isMounted: true,
+      _modelExists: true
+    };
   };
 
+  componentDidMount = function(){
+    this.syncDown((error, modelState) => {
+      if(error){
+        // model does not exist
+        this.setState({
+          _modelExists: false
+        });
+      }else{
+        this.setState((workingState)=>{
+          workingState = JSON.parse(modelState);
+          workingState._isLoaded = true;
+          return(workingState);
+        }, ()=> {
+          this.computeEverything();
+        })
+      }
+    })
+  };
+
+  componentDidUpdate = function(prevProps, prevState, snapshot){
+    this.syncUp();
+  }
+
   syncDown = function(callback){
+    // get id from url
+    const modelID = document.location.pathname.split('/')[document.location.pathname.split('/').length-1];
+
     const userHash = this.props.userHash;
     const toSend = {
       userIDHash: userHash,
-      modelID: this.props.modelID
+      modelID: modelID
     }
 
     fetch('/get-user-data-single', {
@@ -133,37 +74,45 @@ class App extends React.Component{
     })
     .then(response => response.json())
     .then((serverObject) => {
-      var newModel = JSON.parse(serverObject.model);
-      newModel.metadata.id = parseInt(serverObject.id);
-      newModel.metadata.createdDateTime = serverObject.createdDateTime;
-      callback(JSON.parse(serverObject.model))
+      // if(serverObject.status)
+      if(serverObject.status === 'error'){
+        callback(true, null);
+      }else{
+        var newModel = JSON.parse(serverObject.model);
+        newModel.metadata.id = parseInt(serverObject.id);
+        newModel.metadata.createdDateTime = serverObject.createdDateTime;
+        callback(null, serverObject.model)
+      }
+
     })
   }
 
   syncUp = function(){
     // syncs up a single model
-    const userHash = this.props.userHash;
-    const toSend = {
-      userIDHash: userHash,
-      modelID: this.props.modelID,
-      modelJSON: this.state
-    }
+    const modelID = document.location.pathname.split('/')[document.location.pathname.split('/').length-1];
+    if(this.state._isLoaded){
+      const userHash = this.props.userHash;
+      const toSend = {
+        modelID: modelID,
+        modelJSON: this.state
+      }
 
-    fetch('/edit-model', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(toSend),
-    })
-    .then(response => response.json())
-    .then((serverResponse) => {
-      // var newModel = JSON.parse(serverObject.model);
-      // newModel.metadata.id = parseInt(serverObject.id);
-      // newModel.metadata.createdDateTime = serverObject.createdDateTime;
-      // callback(JSON.parse(serverObject.model))
-      console.log('serverResponse = ', serverResponse);
-    })
+      fetch('/edit-model', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(toSend),
+      })
+      .then(response => response.json())
+      .then((serverResponse) => {
+        // var newModel = JSON.parse(serverObject.model);
+        // newModel.metadata.id = parseInt(serverObject.id);
+        // newModel.metadata.createdDateTime = serverObject.createdDateTime;
+        // callback(JSON.parse(serverObject.model))
+        console.log('serverResponse = ', serverResponse);
+      })
+    }
   }
 
   financialNum = function(x){
@@ -174,17 +123,7 @@ class App extends React.Component{
     compute.asyncComputeArraysIncomeStatement(this.state.model, this.state.computedArrays, (error, result) => {
       this.setState({
         computedArrays: result
-      }, () => {
-        // sync-related tasks
-        var summaryData = {
-          capRate: ((Math.round((this.state.computedArrays.netOperatingIncome[0]*12 / this.state.computedArrays.propertyValue[0]) * 100))+'%'),
-          grm: (this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)),
-          cashOnCashReturn: (((this.state.computedArrays.cashFlow[0] * 12) + (this.state.computedArrays.valueOfRealEstateInvestment[1] - this.state.computedArrays.valueOfRealEstateInvestment[0])  ) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)),
-          fyCashflow: (this.state.computedArrays.cashFlow[0] * 12)
-        }
-        this.props.getSummaryDataCallback(summaryData);
-        this.syncUp();
-      });
+      })
     });
   };
 
@@ -212,20 +151,6 @@ class App extends React.Component{
     });
   };
 
-  componentDidMount = function(){
-    this.syncDown((modelState) => {
-      this.setState((workingState)=>{
-        workingState = modelState;
-        return(workingState);
-      }, ()=> {
-        this.computeEverything();
-      })
-    })
-  };
-
-  componentDidUpdate = function(prevProps, prevState, snapshot){
-  }
-
   computeEverything = function(){
     this.computeAllCompoundInterestArrays();
   }.bind(this);
@@ -237,7 +162,6 @@ class App extends React.Component{
       return(this.state.computedArrays.paymentsAnnualized[1]);
     }
   }.bind(this);
-
 
   IncomeStatement = function(){
     var unitRowsVisual = [],
@@ -863,136 +787,155 @@ class App extends React.Component{
           model: previousState.model
         });
       });
+    }else{
+      this.setState((previousState)=>{
+        previousState.model[parameter] = value;
+        return({
+          model: previousState.model
+        });
+      },this.computeEverything());
     }
-
-    this.setState((previousState)=>{
-      previousState.model[parameter] = value;
-      return({
-        model: previousState.model
-      });
-    },this.computeEverything());
   }.bind(this);
 
   render(){
-    return(
-      <React.Fragment>
-        <section id="app-sections">
-          <MetadataComponent
-            updateParentParameter = {(parameter, value) => {
-              this.updateParameter(parameter, value, true);
-            }}
-            title = {this.state.metadata.title}
-            isUntitled = {false}
-          />
-          <div className="app">
-              <div className="app-row-1">
-
-                <br />
-                <InputContainer
-                  className = "input-container container-padding-margin"
-                  purchasePrice = {this.state.computedArrays.propertyValue[0]}
-                  appModel = {this.state.model}
-                  loanLengthYears = {this.state.model.loanLengthYears}
-                  valueOfLand = {this.state.model.valueOfLand}
-                  yearsOutComputation = {this.state.model.yearsOutComputation}
-                  depreciateOver = {this.state.model.depreciateOver}
-                  maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
-
-                  updateParametersCallback = {this.updateParametersCallback}
-                  updateParameterCallback = {this.updateParameter}
-                />
-
-                <ChartContainer
-                  className = "chart-container"
-                  yearsOutComputation = {this.state.model.yearsOutComputation}
-                  data={{
-                    'cumEquity': this.state.computedArrays.totalEquity,
-                    'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
-                    'cashFlow': this.state.computedArrays.cashFlow,
-                  }}
-                  amortization={{
-                    'cumEquity': this.state.computedArrays.totalEquity,
-                    'cumInterest': this.state.computedArrays.cumInterest,
-                    'cumPrincipal': this.state.computedArrays.cumPrincipal
-                  }}
-                />
-              </div>
-
-              <div className="container-padding-margin">
-                <h3>Key Metrics</h3>
-                <div className="metrics-container">
-                <Metric
-                  value={(this.state.computedArrays.netOperatingIncome[0]*12) / this.state.computedArrays.propertyValue[0]}
-                  label={'Cap Rate'}
-                  hint={'NOI / Purchase Price'}
-                  range={[0,10]}
-                  colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={true}
-                  prefix={''}
-                  postfix={'%'}
-                />
-
-                <Metric
-                  value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
-                  label={'Gross Rent Multiplier'}
-                  hint={'PP / GRI'}
-                  range={[0,40]}
-                  colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={false}
-                  prefix={''}
-                />
-
-                <Metric
-                  value={(this.state.computedArrays.cashFlow[0])*12 / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
-                  label={'Cash-On-Cash Return'}
-                  hint={'pre-tax cash flow / cash invested (down payment)'}
-                  range={[0,100]}
-                  colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={true}
-                  prefix={''}
-                  postfix={'%'}
-                />
-
-                <Metric
-                  value={((this.state.computedArrays.cashFlow[0] * 12) + (this.state.computedArrays.valueOfRealEstateInvestment[1] - this.state.computedArrays.valueOfRealEstateInvestment[0])  ) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
-                  label={'Cash-On-Cash Return, incl. Equity'}
-                  hint={'pre-tax cash flow / cash invested (down payment)'}
-                  range={[0,100]}
-                  colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={true}
-                  prefix={''}
-                  postfix={'%'}
-                />
-
-                <Metric
-                  value={this.state.computedArrays.cashFlow[0] * 12}
-                  label={'First Year Cashflow'}
-                  hint={'pre-tax cash flow / cash invested (down payment)'}
-                  range={[0,0]}
-                  colorProgression={['#721c24','#856404','#155724']}
-                  highPositive={true}
-                  prefix={'$'}
-                />
-            </div>
-              </div>
-
-          </div>
-
-          <div className="app-row-2">
-            <this.IncomeStatement />
-          </div>
-
-          <div className="container-padding-margin">
-            <ProjectionTable
-              computedArrays={this.state.computedArrays}
-              nameMappings = {this.state.nameMappings}
-              yearsOutComputation = {this.state.model.yearsOutComputation}
+    if(this.state._isLoaded){
+      return(
+        <React.Fragment>
+          <section id="app-sections">
+            <MetadataComponent
+              updateParentParameter = {(parameter, value) => {
+                console.log('updating title: ', parameter, value);
+                this.updateParameter(parameter, value, true);
+              }}
+              title = {this.state.metadata.title}
             />
-          </div>
+            <div className="app">
+                <div className="app-row-1">
 
+                  <br />
+                  <InputContainer
+                    className = "input-container container-padding-margin"
+                    purchasePrice = {this.state.computedArrays.propertyValue[0]}
+                    appModel = {this.state.model}
+                    loanLengthYears = {this.state.model.loanLengthYears}
+                    valueOfLand = {this.state.model.valueOfLand}
+                    yearsOutComputation = {this.state.model.yearsOutComputation}
+                    depreciateOver = {this.state.model.depreciateOver}
+                    maxWriteoffPerYear = {this.state.model.maxWriteoffPerYear}
+
+                    updateParametersCallback = {this.updateParametersCallback}
+                    updateParameterCallback = {this.updateParameter}
+                  />
+
+                  <ChartContainer
+                    className = "chart-container"
+                    yearsOutComputation = {this.state.model.yearsOutComputation}
+                    data={{
+                      'cumEquity': this.state.computedArrays.totalEquity,
+                      'stockMarketValue': this.state.computedArrays.valueOfStockMarketInvestment,
+                      'cashFlow': this.state.computedArrays.cashFlow,
+                    }}
+                    amortization={{
+                      'cumEquity': this.state.computedArrays.totalEquity,
+                      'cumInterest': this.state.computedArrays.cumInterest,
+                      'cumPrincipal': this.state.computedArrays.cumPrincipal
+                    }}
+                  />
+                </div>
+
+                <div className="container-padding-margin">
+                  <h3>Key Metrics</h3>
+                  <div className="metrics-container">
+                  <Metric
+                    value={(this.state.computedArrays.netOperatingIncome[0]*12) / this.state.computedArrays.propertyValue[0]}
+                    label={'Cap Rate'}
+                    hint={'NOI / Purchase Price'}
+                    range={[0,10]}
+                    colorProgression={['#721c24','#856404','#155724']}
+                    highPositive={true}
+                    prefix={''}
+                    postfix={'%'}
+                  />
+
+                  <Metric
+                    value={this.state.computedArrays.propertyValue[0] / (this.state.computedArrays.grossRentalIncome[0] * 12)}
+                    label={'Gross Rent Multiplier'}
+                    hint={'PP / GRI'}
+                    range={[0,40]}
+                    colorProgression={['#721c24','#856404','#155724']}
+                    highPositive={false}
+                    prefix={''}
+                  />
+
+                  <Metric
+                    value={(this.state.computedArrays.cashFlow[0])*12 / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                    label={'Cash-On-Cash Return'}
+                    hint={'pre-tax cash flow / cash invested (down payment)'}
+                    range={[0,100]}
+                    colorProgression={['#721c24','#856404','#155724']}
+                    highPositive={true}
+                    prefix={''}
+                    postfix={'%'}
+                  />
+
+                  <Metric
+                    value={((this.state.computedArrays.cashFlow[0] * 12) + (this.state.computedArrays.valueOfRealEstateInvestment[1] - this.state.computedArrays.valueOfRealEstateInvestment[0])  ) / (this.state.computedArrays.propertyValue[0] * this.state.model.downPaymentPct)}
+                    label={'Cash-On-Cash Return, incl. Equity'}
+                    hint={'pre-tax cash flow / cash invested (down payment)'}
+                    range={[0,100]}
+                    colorProgression={['#721c24','#856404','#155724']}
+                    highPositive={true}
+                    prefix={''}
+                    postfix={'%'}
+                  />
+
+                  <Metric
+                    value={this.state.computedArrays.cashFlow[0] * 12}
+                    label={'First Year Cashflow'}
+                    hint={'pre-tax cash flow / cash invested (down payment)'}
+                    range={[0,0]}
+                    colorProgression={['#721c24','#856404','#155724']}
+                    highPositive={true}
+                    prefix={'$'}
+                  />
+              </div>
+                </div>
+
+            </div>
+
+            <div className="app-row-2">
+              <this.IncomeStatement />
+            </div>
+
+            <div className="container-padding-margin">
+              <ProjectionTable
+                computedArrays={this.state.computedArrays}
+                nameMappings = {nameMappings.nameMappings}
+                yearsOutComputation = {this.state.model.yearsOutComputation}
+              />
+            </div>
+
+          </section>
+        </React.Fragment>
+      )
+    }else if(!this.state._modelExists){
+      return(
+        <section id="app-sections">
+          <div className="app">
+            <h4>Error: Model does not exist.</h4>
+          </div>
         </section>
-      </React.Fragment>
-    )
+      )
+    }else{
+      return(
+        <section id="app-sections">
+          <div className="app">
+            <h4>Model loading...</h4><Spinner animation="grow" variant="success" />
+          </div>
+        </section>
+      )
+    }
+
   }
 }
 export default App;

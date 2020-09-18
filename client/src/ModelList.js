@@ -1,22 +1,23 @@
-import React from 'react';
-// import moment from 'moment';
+import React, { useState, useEffect } from 'react';
+import moment from 'moment';
 import App from './App';
 import './include/css/universal.css';
 import './include/css/modelList.css';
 import { Icon } from "@blueprintjs/core";
 import NumberFormat from 'react-number-format';
-// <NumberFormat
-//   value={value}
-//   thousandSeparator={true}
-//   defaultValue = {0}
-//   fixedDecimalScale = {true}
-//   decimalScale = {2}
-//   displayType={'text'}
-// />
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+
 var _ = require('lodash');
 var reIcon = require('./include/media/real-estate-1.svg');
+var now = moment();
 
 var isIconSize = 18;
+// new models are generated from this
 var templateModel = {
   model : {
     rentYRG: 0.02,
@@ -69,7 +70,7 @@ var templateModel = {
   },
 
   metadata: {
-    title: 'template model #1',
+    title: now.format('M/D') + ' untitled model',
     isSaved: false
   },
 
@@ -117,29 +118,24 @@ var templateModel = {
 class ModelList extends React.Component{
   constructor(props){
     super(props);
-    var summaryDataTemplate = {
-      grm: '...',
-      capRate: '...',
-      cashOnCashReturn: '...',
-      fyCashflow: '...'
-    }
 
     this.initialState = {
-      userModels: {},
-      selectedModel: null,
-      summaryData: summaryDataTemplate
+      syncRequired: false
     }
     this.state = this.initialState;
   }
 
   componentDidMount = function(){
     this.syncDown();
-  }
-  getSummaryDataCallback = function(summaryData){
-    this.setState((workingState) => {
-      workingState.summaryData = summaryData;
-      return(workingState);
-    });
+  }.bind(this);
+
+  componentDidUpdate = function(){
+    console.log('componentDidUpdate');
+
+    if(this.state.syncRequired){
+      console.log('syncRequired = true');
+      this.syncDown();
+    }
   }.bind(this);
 
   getUserIDHash = function(){
@@ -161,7 +157,7 @@ class ModelList extends React.Component{
       const toSend = {
         userIDHash: userIDHash,
       }
-      fetch('/get-user-data', {
+      fetch('/get-ids', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -169,8 +165,8 @@ class ModelList extends React.Component{
         body: JSON.stringify(toSend),
       })
       .then(response => response.json())
-      .then((userModels) => {
-        callback(false, userModels)
+      .then((ids) => {
+        callback(false, ids)
       })
     }else{
       console.log('getting new cookie');
@@ -195,14 +191,15 @@ class ModelList extends React.Component{
   }
 
   syncDown = function(){
-    this.getIdentificationCookieAndData(function(isNewUser, retrievedUserData){
+    // TODO: remove callback
+    this.getIdentificationCookieAndData(function(isNewUser, retrievedUserIDs){
       if(!isNewUser){
         this.setState({
-          userModels: retrievedUserData,
+          userModelIDs: retrievedUserIDs,
+          syncRequired: false
         });
       }
     }.bind(this));
-
   }.bind(this)
 
   deleteModel = function(modelID){
@@ -225,11 +222,9 @@ class ModelList extends React.Component{
       if(response !== 1){
         //error
       }
-
-      this.setState((workingState) => {
-        delete workingState.userModels[modelID];
-        return(workingState);
-      })
+      this.setState({
+        syncRequired: true
+      });
       // put the new model in state
     }).catch((error) => {
       alert('Could not delete model, check your internet connection.');
@@ -238,13 +233,11 @@ class ModelList extends React.Component{
 
   addModel = function(){
     // TODO: Make not template
-    console.log('addModel');
-
     const toSend = {
       modelJSON: templateModel,
       userIDHash: this.getUserIDHash()
     };
-
+    var thisBind = this;
     fetch('/create-model', {
       method: 'POST',
       headers: {
@@ -255,83 +248,113 @@ class ModelList extends React.Component{
     .then(function(response){
       return response.json()
     })
-    .then((response) => {
-      var iterator = parseInt(response.iterator);
-      this.setState((workingState) => {
-        workingState.userModels[iterator] = toSend.modelJSON;
-        workingState.selectedModel = iterator;
-        return(workingState);
+    .then(function(response){
+      // GenerateModelItems
+      thisBind.setState({
+        syncRequired: true
       })
-      // put the new model in state
-    }).catch((error) => {
+    })
+    .catch((error) => {
       alert('Could not create a new model, check your internet connection.');
     })
   }.bind(this)
 
   handleSelectionChange = function(id){
-    this.setState({
-      selectedModel: null
-    }, () => {
-      this.setState({
-        selectedModel: parseInt(id)
-      });
-    })
+    console.log('handleSelectionChange');
   }
 
   ModelItem = function(props){
+    const [summary, setSummary] = useState({});
+
+    const toSend = {
+      userIDHash: this.getUserIDHash(),
+      modelID: props.id
+    };
+
+    var fetchSummaryData = function(){
+      fetch('/get-summary-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(toSend)
+      })
+      .then(function(response){
+        return response.json()
+      })
+      .then((response) => {
+        var responseS = response.summaryData;
+
+
+        setSummary({
+          title: responseS.title,
+          capRate: responseS.capRate,
+          cashOnCashReturn: responseS.cashOnCashReturn,
+          createdDateTime: responseS.createdDateTime,
+          fyCashflow: responseS.fyCashflow,
+          grm: responseS.grm,
+        });
+
+      }).catch((error) => {
+        console.log('Unable to get summary data');
+      });
+    }
+    useEffect(fetchSummaryData, [props.id]);
+
     var style = {
     }
+    const selectedModelID = parseInt(document.location.pathname.split('/')[document.location.pathname.split('/').length-1]);
 
-    if(this.state.selectedModel === parseInt(props.id)){
+    if(selectedModelID === parseInt(props.id)){
       style={
         'backgroundColor': 'lightgray',
       }
     }
+    var blankLink = React.forwardRef((props, ref) => (
+      <a className="link-noblue" ref={ref} href={props.href}>{props.children}</a>
+    ))
 
     return(
       <React.Fragment>
+        <Router>
+          <Link
+            to={'/model/'+props.id}
+            component={blankLink}
+          >
+            <div style={style} className="model-item">
+              <table id="model-and-delete">
+                <tbody>
+                <tr>
+                <td className={'pointer'} className="linkToApp" onClick={()=> {this.handleSelectionChange(props.id)}}>
+                  <b>{summary.title}</b>
+                  <br />
+                  <p>Created {moment(summary.datetime).format('M/D, h:mma')}</p>
+                  <br />
+                  <p><b>Cap Rate: </b>{(summary.capRate)}</p>
+                  <br />
+                  <p><b>GRM: </b>{(summary.grm)}</p>
+                </td>
+                <td>
+                  <Icon className={'hyperlink'} icon={'small-cross'} intent="danger" onClick={() => {this.deleteModel(props.id)}} />
+                </td>
 
-              <div style={style} className="model-item" onClick={()=> {this.handleSelectionChange(props.id)}}>
-                <table id="model-and-delete">
-                  <tbody>
-                  <tr>
-                  <td className={'pointer'}>
-                    <b>{props.title}</b>
-                    <br />
-                    <p>Just another real estate model</p>
-                    <br />
-                    <p>{props.datetime}</p>
-                    <br />
-                    <p><b>Cap Rate: </b>{(this.state.summaryData.capRate)}</p>
-
-                    <br />
-                    <p><b>GRM: </b>{(this.state.summaryData.grm)}</p>
-
-                  </td>
-
-
-                  <td>
-                    <Icon className={'hyperlink'} icon={'small-cross'} intent="danger" onClick={() => {this.deleteModel(props.id)}} />
-                  </td>
-
-                </tr>
-                </tbody>
-                </table>
-              </div>
-
+              </tr>
+              </tbody>
+              </table>
+            </div>
+          </Link>
+        </Router>
       </React.Fragment>
     )
   }.bind(this)
 
   GenerateModelItems = function(){
     var visualModels = [];
-    _.each(this.state.userModels, (model, key) => {
+    _.each(this.state.userModelIDs, (id, key) => {
       visualModels.push(
           <this.ModelItem
             key={key}
-            id={key}
-            title={model.metadata.title}
-            datetime={model.metadata.createdDateTime}
+            id={id}
           />
       )
     });
@@ -350,7 +373,7 @@ class ModelList extends React.Component{
     }
 
     return(
-      <div className="sidebar container">
+      <div className="sidebar containerNB">
         <img style={iconStyle} src={reIcon} alt="skyscrapers icon" width="36px" />
         <h3 style={titleStyle}>Real Estate Model</h3>
         <hr />
@@ -372,22 +395,35 @@ class ModelList extends React.Component{
   }.bind(this)
 
   RenderApp = function(){
-    if(this.state.selectedModel === null || ((Object.keys(this.state.userModels)).length === 0)){
+    var selectedModelID = window.location.pathname.split('/')[2];
+
+    if(!selectedModelID){
       return(
         <React.Fragment>
           <div className="welcome-text">
             <h3>Welcome to Real Estate Model! <br /> Select a model, or <a href="#" onClick={this.addModel}>Create One</a></h3>
+
+            <br />
+            <br />
+            <br />
+            <h5>Tips</h5>
+            <ul>
+              <li>Your saved models are saved with a cookie in your browser. To permanently save a model, copy it's link.</li>
+              <li>To share a model, simple copy the URL. Anyone with the link will be able to edit it.</li>
+            </ul>
+
           </div>
 
         </React.Fragment>
       )
     }else {
       return(
-        <App
-          modelID={this.state.selectedModel}
-          userHash={this.getUserIDHash()}
-          getSummaryDataCallback={this.getSummaryDataCallback}
-        />
+        <>
+          <App
+            modelID={window.location.pathname.split('/')[2]}
+            userHash={this.getUserIDHash()}
+          />
+        </>
       )
     }
   }.bind(this);
@@ -395,8 +431,10 @@ class ModelList extends React.Component{
   render(){
     return(
       <React.Fragment>
-        <this.SideBar />
-        <this.RenderApp />
+        <Router>
+          <this.SideBar />
+          <this.RenderApp />
+        </Router>
       </React.Fragment>
     )
   }

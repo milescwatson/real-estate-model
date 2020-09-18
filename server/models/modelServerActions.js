@@ -11,6 +11,26 @@ var decrypt = function(cipher){
   return(result)
 }
 
+var modelExists = function(id, callback){
+
+  const checkIfExistsQuery = {
+    sql: 'SELECT COUNT(*) FROM `real-estate-model`.`Models` WHERE `id` = ?',
+    values: [id]
+  }
+  mysql.query(checkIfExistsQuery, function(error, result){
+    if(error){
+      callback(error, null);
+    }else{
+      const count = parseInt(result[0]['COUNT(*)']);
+      if(count >= 1){
+        callback(null, true);
+      }else{
+        callback(null, false);
+      }
+    }
+  });
+}
+
 var createModel = function(request, response, next){
   var modelString = JSON.stringify(request.body.modelJSON);
   var userID = decrypt(request.body.userIDHash);
@@ -21,50 +41,51 @@ var createModel = function(request, response, next){
   }
   mysql.query(QcreateModel, function(error, result){
     const insertID = result.insertId;
-    response.send(JSON.stringify({iterator: insertID}));
     console.log('created model ', insertID);
+    response.send(JSON.stringify({iterator: insertID}));
   });
-
 }
 
 var editModel = function(request, response, next){
   const requestBody = {
-    userID: parseInt(decrypt(request.body.userIDHash)),
+    // userID: parseInt(decrypt(request.body.userIDHash)),
     modelID: parseInt(request.body.modelID),
     modelJSON: request.body.modelJSON
   }
+
   // check if identical to current model
   const queryCurrentModel = {
-    sql: 'SELECT model FROM `Models` WHERE `id`=? AND `ownerID`=? ',
-    values: [requestBody.modelID, requestBody.userID]
+    sql: 'SELECT model FROM `Models` WHERE `id`=?',
+    values: [requestBody.modelID]
   }
 
   mysql.query(queryCurrentModel, function(error, result){
     if(error){
-      console.log('error could not get model data');
-    }
-    const jsonStringModel = result[0].model;
-    const modelObj = JSON.parse(jsonStringModel);
-    const isSyncAgreement = _.isEqual(modelObj.computedArrays, requestBody.modelJSON.computedArrays);
-
-    if(!isSyncAgreement){
-      console.log('sync disagree');
-      const updateModelQuery = {
-        sql: 'UPDATE `Models` SET `model`=? WHERE id=?',
-        values: [JSON.stringify(modelObj), requestBody.modelID]
-      }
-      mysql.query(updateModelQuery, function(error, result){
-        if(error){
-          console.log('error with update query', error);
-        }else{
-          console.log('result of updateQuery = ', result);
-        }
-      });
-
+      console.log('error, could not edit model');
     }else{
-      console.log('sync disagree');
-    }
+      const modelObj = JSON.parse(result[0].model);
 
+      const isSyncAgreement = _.isEqual(modelObj, requestBody.modelJSON);
+
+      if(!isSyncAgreement){
+        console.log('sync disagree');
+        const updateModelQuery = {
+          sql: 'UPDATE `Models` SET `model`=? WHERE `id`=?',
+          values: [JSON.stringify(requestBody.modelJSON), requestBody.modelID]
+        }
+        mysql.query(updateModelQuery, function(error, result){
+          if(error){
+            console.log('error with update query', error);
+            response.send('error')
+          }else{
+            response.send('{"status":"sync-disagree"}')
+          }
+        });
+      }else{
+        console.log('sync AGREE');
+        response.send('{"status":"sync-agree"}')
+      }
+    }
   })
 }
 
@@ -156,35 +177,44 @@ var getUserDataSingle = function(request, response, next){
   var userID = decrypt(request.body.userIDHash);
   var modelID = parseInt(request.body.modelID);
 
-  var queryUserData = {
-    sql: 'SELECT model,id,createdDateTime FROM Models WHERE `ownerID`=? AND `id`=?',
-    values: [userID, modelID]
-  }
-  console.log('userID, modelID', userID, modelID);
-
-  mysql.query(queryUserData, function(error, result){
-    if(error){
-      response.send('error, could not retrieve user data');
-    } else {
-
-      var returnObj = {
-        model: result[0].model,
-        id: result[0].id,
-        createdDateTime: result[0].createdDateTime,
+  modelExists(modelID, function(error, exists){
+    if(exists){
+      var queryUserData = {
+        sql: 'SELECT model,id,createdDateTime FROM Models WHERE `id`=?',
+        values: [modelID]
       }
-      response.send(returnObj)
+      console.log('sent single userData for user,model ', modelID);
 
+      mysql.query(queryUserData, function(error, result){
+        if(error){
+          response.send('error, could not retrieve user data');
+        } else {
+          var returnObj = {
+            model: result[0].model,
+            id: result[0].id,
+            createdDateTime: result[0].createdDateTime,
+          }
+          response.send(returnObj)
+        }
+      })
+    }else{
+      const errorMessage = JSON.stringify({
+        status: "error",
+        message: "Model does not exist"
+      });
+
+      response.send(errorMessage);
     }
-  })
+  });
 }
 
-var getSummaryData = function(request, response, next){
-  // TODO: verify working, implement in client
+var getSummaryData = function(request, response){
+  // TODO: also send all userModel title, dates, etc.
   var userID = decrypt(request.body.userIDHash);
   var modelID = parseInt(request.body.modelID);
 
   const queryModel = {
-    sql: 'SELECT model FROM Models WHERE id=?',
+    sql: 'SELECT model, id, createdDateTime FROM Models WHERE `id`=?',
     values: [modelID]
   }
 
@@ -192,18 +222,82 @@ var getSummaryData = function(request, response, next){
     if(error){
       response.send('error, could not retrieve user data');
     } else {
-      const jsonStringModel = result[0].model;
-      const modelObj = JSON.parse(jsonStringModel);
-      var returnObj = {
-        capRate: ((Math.round((modelObj.computedArrays.netOperatingIncome[0]*12 / modelObj.computedArrays.propertyValue[0]) * 100))+'%'),
-        grm: (modelObj.computedArrays.propertyValue[0] / (modelObj.computedArrays.grossRentalIncome[0] * 12)),
-        cashOnCashReturn: (((modelObj.computedArrays.cashFlow[0] * 12) + (modelObj.computedArrays.valueOfRealEstateInvestment[1] - modelObj.computedArrays.valueOfRealEstateInvestment[0])  ) / (modelObj.computedArrays.propertyValue[0] * modelObj.model.downPaymentPct)),
-        fyCashflow: (modelObj.computedArrays.cashFlow[0]*12)
+      // console.log(modelID,'sd result = ', result);
+      if(result.length !== 0){
+        const jsonStringModel = result[0].model;
+        const modelObj = JSON.parse(jsonStringModel);
+        // console.log('modelObj = ', modelObj);
+
+        var returnObj = {
+          summaryData: {
+            title: (modelObj.metadata.title),
+            capRate: ((Math.round((modelObj.computedArrays.netOperatingIncome[0]*12 / modelObj.computedArrays.propertyValue[0]) * 100))+'%'),
+            grm: (modelObj.computedArrays.propertyValue[0] / (modelObj.computedArrays.grossRentalIncome[0] * 12)).toFixed(2),
+            cashOnCashReturn: (((modelObj.computedArrays.cashFlow[0] * 12) + (modelObj.computedArrays.valueOfRealEstateInvestment[1] - modelObj.computedArrays.valueOfRealEstateInvestment[0])  ) / (modelObj.computedArrays.propertyValue[0] * modelObj.model.downPaymentPct)),
+            fyCashflow: (modelObj.computedArrays.cashFlow[0]*12),
+            createdDateTime: result[0].createdDateTime
+          }
+        }
+        response.send(returnObj);
       }
-      response.send(returnObj)
     }
   })
 }
+
+var getIds = function(request, response, next){
+  var userID = decrypt(request.body.userIDHash);
+  const queryModel = {
+    sql: 'SELECT id FROM Models WHERE ownerID=?',
+    values: [userID]
+  }
+
+  mysql.query(queryModel, function(error, results){
+    if(error){
+      response.send('error, could not retrieve user data');
+    } else {
+      var usersModelIds = [];
+      for (var i = 0; i < results.length; i++) {
+        usersModelIds.push(results[i].id);
+      }
+      response.send(JSON.stringify(usersModelIds));
+    }
+  })
+}
+
+
+// var getSummaryModelList = function(request, response){
+//   var userID = decrypt(request.body.userIDHash);
+//   var queryUserData = {
+//     sql: 'SELECT model,id,createdDateTime FROM Models WHERE `ownerID`=?',
+//     values: [userID]
+//   }
+//
+//   mysql.query(queryUserData, function(error, result){
+//     if(error){
+//       response.send('error, could not retrieve user data');
+//     } else {
+//       var returnModelArray = [];
+//
+//       for (var i = 0; i < result.length; i++) {
+//         var summary = {}
+//         const createdDateTime = result[i].createdDateTime;
+//         const id = result[i].id;
+//         const jsonModel = JSON.parse(result[i].model);
+//
+//         summary.id = id;
+//         summary.grm = (jsonModel.computedArrays.propertyValue[0] / (jsonModel.computedArrays.grossRentalIncome[0] * 12));
+//         summary.createdDateTime = createdDateTime;
+//         summary.capRate = ((Math.round((jsonModel.computedArrays.netOperatingIncome[0]*12 / jsonModel.computedArrays.propertyValue[0]) * 100))+'%');
+//         summary.cashOnCashReturn = (((jsonModel.computedArrays.cashFlow[0] * 12) + (jsonModel.computedArrays.valueOfRealEstateInvestment[1] - jsonModel.computedArrays.valueOfRealEstateInvestment[0])  ) / (jsonModel.computedArrays.propertyValue[0] * jsonModel.model.downPaymentPct))
+//         summary.fyCashflow = (jsonModel.computedArrays.cashFlow[0] * 12)
+//         summary.title = jsonModel.metadata.title;
+//
+//         returnModelArray.push(summary)
+//       }
+//       response.send(returnModelArray)
+//     }
+//   })
+// }
 
 exports.createModel = createModel;
 exports.editModel = editModel;
@@ -212,3 +306,4 @@ exports.getIdentifier = getIdentifier;
 exports.getUserData = getUserData;
 exports.getUserDataSingle = getUserDataSingle;
 exports.getSummaryData = getSummaryData;
+exports.getIds = getIds;

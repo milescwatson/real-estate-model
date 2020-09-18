@@ -33,7 +33,6 @@ app.post('/login',
 
 app.post('/create-user', authentication.createUser);
 
-
 // Model
 app.post('/create-model', model.createModel)
 app.post('/edit-model', model.editModel)
@@ -42,6 +41,7 @@ app.post('/get-identifier', model.getIdentifier);
 app.post('/get-user-data', model.getUserData);
 app.post('/get-user-data-single', model.getUserDataSingle);
 app.post('/get-summary-data', model.getSummaryData);
+app.post('/get-ids', model.getIds);
 
 //TODO: Handle update of entire model, if a single model edit request did not go through
 app.post('/amortization-object', amortization.returnAmortizationObject);

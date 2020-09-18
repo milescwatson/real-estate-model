@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './include/css/MetadataComponent.css'
 import './include/css/bootstrap.min.css';
 import './include/css/universal.css';
@@ -7,38 +7,25 @@ import './include/css/universal.css';
 
 function MetadataComponent(props) {
   const [state, setState] = useState({
-    title:'',
+    title: props.title
   });
 
-  // var updateMetadata = function(){
-  //   var workingState = {...state};
-  //   workingState.title = props.title;
-  //   setState(workingState);
-  // }
-
   var updateTitle = function(newTitle){
-    props.updateParentParameter('title', newTitle)
     setState({title: newTitle})
+    props.updateParentParameter('title', newTitle)
   }
 
-  // var updateParent = function(parameter){
-  //   console.log('safd');
+  // var initTitle = function(){
+  //   setState({title: props.title, shouldUpdateTitle: true})
   // }
-
-  // useEffect(() => {
-  //   updateMetadata();
-  // },[])
 
   return(
     <React.Fragment>
       <div className="container-padding-margin">
-
-        <div class="form-group">
-          <label for="titlebar">Model Title:  </label>
-          <input value= {state.title} className="form-control" id="titlebar" placeholder = "Enter a title..." onChange={(event) => {updateTitle(event.target.value)}}/>
+        <div className="form-group">
+          <h4 style={{display:'inline'}}>Model Title:  </h4>
+          <input style={{display:'inline', width: '60%'}} value={state.title} className="form-control" id="titlebar" placeholder = "Enter a title..." onChange={(event) => {updateTitle(event.target.value)}}/>
         </div>
-
-
       </div>
     </React.Fragment>
   )

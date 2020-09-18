@@ -20,11 +20,10 @@ h3 {
   padding: 0.5%;
 }
 
-.container {
+.containerNB {
   /* box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12); */
   box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.12);
-  border: 1px solid #8080801f;
-
+  padding: 1px;
   margin-top: 10px;
   margin-bottom: 10px;
 }
@@ -39,6 +38,8 @@ h3 {
 
 body {
   font-family: 'Roboto', sans-serif;
+  font-size: 12pt;
+  line-height: 16pt;
 }
 
 #app-sections {

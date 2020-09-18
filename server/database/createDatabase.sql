@@ -1,3 +1,6 @@
+-- TODO: revert this, it was incorrectly changed
+
+
 CREATE DATABASE IF NOT EXISTS `real-estate-model`;
 
 DROP TABLE IF EXISTS `real-estate-model`.`User`;
@@ -11,17 +14,7 @@ CREATE TABLE `real-estate-model`.`User` (
 INSERT INTO `real-estate-model`.`User`(id, ip)
   VALUES(1, '123.123.123.123');
 
-INSERT INTO `real-estate-model`.`User`(id, ip)
-  VALUES(2, '123.123.123.123');
-
-INSERT INTO `real-estate-model`.`User`(id, ip)
-  VALUES(3, '123.123.123.123');
-
-INSERT INTO `real-estate-model`.`User`(id, ip)
-  VALUES(4, '123.123.123.123');
-
 DROP TABLE IF EXISTS `real-estate-model`.`Models`;
-
 CREATE TABLE `real-estate-model`.`Models` (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   model JSON,
