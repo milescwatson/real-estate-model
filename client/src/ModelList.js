@@ -224,11 +224,13 @@ class ModelList extends React.Component{
       }
       this.setState({
         syncRequired: true
+      }, ()=>{
+        window.location.pathname = '/';
       });
       // put the new model in state
     }).catch((error) => {
-      alert('Could not delete model, check your internet connection.');
-    })
+      console.log('Could not delete model, check your internet connection.: ', error);
+    });
   }
 
   addModel = function(){
@@ -258,10 +260,6 @@ class ModelList extends React.Component{
       alert('Could not create a new model, check your internet connection.');
     })
   }.bind(this)
-
-  handleSelectionChange = function(id){
-    console.log('handleSelectionChange');
-  }
 
   ModelItem = function(props){
     const [summary, setSummary] = useState({});
@@ -325,7 +323,7 @@ class ModelList extends React.Component{
               <table id="model-and-delete">
                 <tbody>
                 <tr>
-                <td className={'pointer'} className="linkToApp" onClick={()=> {this.handleSelectionChange(props.id)}}>
+                <td className={'pointer'} className="linkToApp">
                   <b>{summary.title}</b>
                   <br />
                   <p>Created {moment(summary.datetime).format('M/D, h:mma')}</p>

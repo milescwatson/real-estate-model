@@ -23,3 +23,6 @@ CREATE TABLE `real-estate-model`.`Models` (
   userIDs JSON,
   createdDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
+
+CREATE USER 'real-estate-model-dbuser'@'localhost' IDENTIFIED BY 'Zp3KutcpqeJ5';
+GRANT ALL PRIVILEGES ON `real-estate-model`.* TO 'real-estate-model-dbuser'@'localhost';

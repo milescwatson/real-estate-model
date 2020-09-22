@@ -46,6 +46,6 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "http://milescwatson.com/r-model",
+  "homepage": "http://milescwatson.com:3001/real-estate-model",
   "proxy": "http://localhost:3001"
 }
