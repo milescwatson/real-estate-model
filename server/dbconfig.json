@@ -1,6 +1,6 @@
 {
   "host": "localhost",
-  "user": "real-estate-model-dbuser",
+  "user": "remodel",
   "password": "Zp3KutcpqeJ5",
-  "database": "real-estate-model"
+  "database": "remodel"
 }

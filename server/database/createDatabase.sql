@@ -1,21 +1,21 @@
--- TODO: revert this, it was incorrectly changed
+DELIMITER ;
 
+CREATE DATABASE IF NOT EXISTS `remodel`;
 
-CREATE DATABASE IF NOT EXISTS `real-estate-model`;
+DROP TABLE IF EXISTS `remodel`.`User`;
 
-DROP TABLE IF EXISTS `real-estate-model`.`User`;
-
-CREATE TABLE `real-estate-model`.`User` (
+CREATE TABLE `remodel`.`User` (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   ip VARCHAR(16),
   createdDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-INSERT INTO `real-estate-model`.`User`(id, ip)
+INSERT INTO `remodel`.`User`(id, ip)
   VALUES(1, '123.123.123.123');
 
-DROP TABLE IF EXISTS `real-estate-model`.`Models`;
-CREATE TABLE `real-estate-model`.`Models` (
+DROP TABLE IF EXISTS `remodel`.`Models`;
+
+CREATE TABLE `remodel`.`Models` (
   id INTEGER AUTO_INCREMENT PRIMARY KEY,
   model JSON,
   ownerID INT,
@@ -24,5 +24,5 @@ CREATE TABLE `real-estate-model`.`Models` (
   createdDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 
-CREATE USER 'real-estate-model-dbuser'@'localhost' IDENTIFIED BY 'Zp3KutcpqeJ5';
-GRANT ALL PRIVILEGES ON `real-estate-model`.* TO 'real-estate-model-dbuser'@'localhost';
+-- CREATE OR REPLACE USER 'remodel'@'localhost' identified by 'Zp3KutcpqeJ5';
+-- GRANT ALL PRIVILEGES ON 'remodel'.* TO 'remodel'@localhost;
