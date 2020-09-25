@@ -57,8 +57,8 @@ class App extends React.Component{
 
   syncDown = function(callback){
     // get id from url
-    const modelID = document.location.pathname.split('/')[document.location.pathname.split('/').length-1];
-
+    const modelID = parseInt(document.location.pathname.split('/')[document.location.pathname.split('/').length-2]);
+    
     const userHash = this.props.userHash;
     const toSend = {
       userIDHash: userHash,
@@ -89,7 +89,7 @@ class App extends React.Component{
 
   syncUp = function(){
     // syncs up a single model
-    const modelID = document.location.pathname.split('/')[document.location.pathname.split('/').length-1];
+    const modelID = parseInt(document.location.pathname.split('/')[document.location.pathname.split('/').length-2]);
     if(this.state._isLoaded){
       const userHash = this.props.userHash;
       const toSend = {

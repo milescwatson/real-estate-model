@@ -31,7 +31,9 @@ app.post('/login',
                                    failureFlash: true })
 );
 
+
 app.post('/create-user', authentication.createUser);
+
 
 // Model
 app.post('/create-model', model.createModel)
@@ -43,13 +45,14 @@ app.post('/get-user-data-single', model.getUserDataSingle);
 app.post('/get-summary-data', model.getSummaryData);
 app.post('/get-ids', model.getIds);
 
-//TODO: Handle update of entire model, if a single model edit request did not go through
 app.post('/amortization-object', amortization.returnAmortizationObject);
-app.use('/r-model',express.static(__dirname + '/frontend-build'));
 
 app.get('/health', function(request, response, next) {
 	  response.send('{"status": "healthy"}');
 });
+
+app.use('/remodel', express.static('../client/build'));
+app.use('/remodel/*', express.static('../client/build'));
 
 app.listen(port, function() {
   console.log(`Real Estate Model server running on port ${port}!`);

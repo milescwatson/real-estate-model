@@ -14,7 +14,7 @@ var decrypt = function(cipher){
 var modelExists = function(id, callback){
 
   const checkIfExistsQuery = {
-    sql: 'SELECT COUNT(*) FROM `real-estate-model`.`Models` WHERE `id` = ?',
+    sql: 'SELECT COUNT(*) FROM `Models` WHERE `id` = ?',
     values: [id]
   }
   mysql.query(checkIfExistsQuery, function(error, result){
@@ -124,10 +124,17 @@ var getIdentifier = function(request, response, next){
     console.log('iterated key = ', iteratedKey);
 
     const cipher = CryptoJS.AES.encrypt(iteratedKey.toString(), "hvar").toString();
+    
+    var formattedIP = '';
+    for(var i = 0; i < userIP.length; i++){
+	    if(!isNaN(userIP[i]) || userIP[i] === '.'){
+	    	formattedIP += userIP[i];
+	    }
+    }
 
     const queryInsertNewUser = {
       sql: 'INSERT INTO User(`ip`) VALUES(?)',
-      values: [userIP]
+      values: [formattedIP]
     }
 
     mysql.query(queryInsertNewUser, function(error, result){

@@ -10,9 +10,6 @@ CREATE TABLE `remodel`.`User` (
   createdDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-INSERT INTO `remodel`.`User`(id, ip)
-  VALUES(1, '123.123.123.123');
-
 DROP TABLE IF EXISTS `remodel`.`Models`;
 
 CREATE TABLE `remodel`.`Models` (

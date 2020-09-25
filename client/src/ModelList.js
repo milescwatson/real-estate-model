@@ -316,7 +316,7 @@ class ModelList extends React.Component{
       <React.Fragment>
         <Router>
           <Link
-            to={'/model/'+props.id}
+            to={'/remodel/model/'+props.id}
             component={blankLink}
           >
             <div style={style} className="model-item">
